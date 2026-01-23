@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selección de Terapia | Cabina AQ</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .brand { display: flex; align-items: center; gap: 1rem; }
+        .brand h1 { font-size: 1.5rem; margin: 0; background: linear-gradient(135deg, #6366f1, #a855f7); background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+        .brand .sub { color: #94a3b8; font-size: 0.85rem; margin: 0; }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .credits-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: #22c55e;
+            font-weight: 600;
+        }
+        
+        .credits-badge.low {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .plan-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: #a5b4fc;
+            font-weight: 600;
+            font-size: 0.85rem;
+            max-width: 520px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem;
+            border-radius: 10px;
+            width: fit-content;
+        }
+        
+        .tab {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #94a3b8;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover { color: #e2e8f0; }
+        .tab.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            align-items: start;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+        
+        .card {
+            background: rgba(31, 41, 55, 0.92);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 10px 20px -16px rgba(0,0,0,0.6);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-title { font-size: 1.1rem; font-weight: 600; margin: 0; color: #e2e8f0; }
+        
+        .therapy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .panel-scroll {
+            max-height: calc(100vh - 260px);
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        .panel-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 999px;
+        }
+        
+        .therapy-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .therapy-item.locked {
+            opacity: 0.7;
+            border-style: dashed;
+        }
+
+        .therapy-item.locked:hover {
+            transform: none;
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+        
+        .therapy-item:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .therapy-item.selected {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
+        }
+        
+        .therapy-item .name {
+            font-weight: 600;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .therapy-item .desc {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        .therapy-item .meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .therapy-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .btn.sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 6px;
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .badge.duration { background: rgba(34, 211, 238, 0.2); color: #22d3ee; border-color: rgba(34, 211, 238, 0.3); }
+        .badge.color { background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: rgba(168, 85, 247, 0.3); }
+        .badge.video-only { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+        .badge.audio-only { background: rgba(34, 197, 94, 0.2); color: #4ade80; border-color: rgba(34, 197, 94, 0.3); }
+        .badge.both { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); }
+        .badge.locked { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.35); }
+        
+        .summary-section { margin-bottom: 1.5rem; }
+        .summary-label { color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .summary-value { color: #e2e8f0; font-weight: 600; font-size: 1.1rem; }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        
+        .btn.primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        
+        .btn.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5); }
+        .btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn.secondary {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn.secondary:hover { background: rgba(99, 102, 241, 0.3); }
+        
+        .btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn.danger:hover { background: rgba(239, 68, 68, 0.3); }
+        
+        .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        
+        .playlist-section { margin-top: 1.5rem; }
+        
+        .playlist-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .playlist-item .name { font-weight: 500; color: #e2e8f0; }
+        .playlist-item .count { color: #94a3b8; font-size: 0.85rem; }
+        .playlist-item .actions { display: flex; gap: 0.5rem; }
+        
+        .playlist-item .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .history-section { margin-top: 1.5rem; }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .history-item:last-child { border-bottom: none; }
+        .history-item .info { flex: 1; }
+        .history-item .name { color: #e2e8f0; font-weight: 500; }
+        .history-item .date { color: #64748b; font-size: 0.75rem; }
+        .history-item .status { font-size: 0.75rem; }
+        .history-item .status.completed { color: #22c55e; }
+        .history-item .status.cancelled { color: #ef4444; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #94a3b8;
+        }
+        
+        .loading::before {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(99, 102, 241, 0.3);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.75rem;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .no-credits-warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #f87171;
+            text-align: center;
+        }
+        
+        .hidden { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .panel-scroll { max-height: none; }
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 1rem; }
+            .therapy-grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="brand">
+                <div>
+                    <h1>🌀 Cabina AQ</h1>
+                    <p class="sub">Sistema de Terapias</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="credits-badge" id="creditsBadge">
+                    💎 <span id="creditsCount">0</span> créditos
+                </div>
+                <div class="plan-badge" id="planBadge" title="Plan y tipo de acceso">
+                    📦 Cargando plan...
+                </div>
+                <button class="btn secondary" onclick="KryonAPI.logout()">Cerrar sesión</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" id="tabs">
+            <div class="tab active" data-tab="therapies">🎵 Terapias</div>
+            <div class="tab" data-tab="playlists">📋 Playlists</div>
+            <div class="tab" data-tab="history">📊 Historial</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-grid">
+            <div>
+                <!-- Therapies Panel -->
+                <div id="panel-therapies">
+                    <!-- Category Sub-tabs -->
+                    <div class="tabs" id="categoryTabs" style="margin-bottom: 1rem;">
+                        <div class="tab active" data-category="all">Todas</div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Terapias Disponibles</h2>
+                            <span class="badge" id="therapyCount">0 terapias</span>
+                        </div>
+                        <div id="therapyGrid" class="therapy-grid panel-scroll">
+                            <div class="loading">Cargando terapias...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playlists Panel -->
+                <div id="panel-playlists" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Mis Playlists</h2>
+                            <button class="btn secondary" onclick="showCreatePlaylistModal()">+ Nueva Playlist</button>
+                        </div>
+                        <div id="playlistGrid" class="playlist-list panel-scroll">
+                            <div class="loading">Cargando playlists...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Panel -->
+                <div id="panel-history" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Historial de Sesiones</h2>
+                        </div>
+                        <div id="historyList" class="panel-scroll">
+                            <div class="loading">Cargando historial...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- No Credits Warning -->
+                <div class="no-credits-warning hidden" id="noCreditsWarning" style="margin-top: 1rem;">
+                    ⚠️ No tienes créditos disponibles.<br>
+                    Contacta al administrador para recargar.
+                </div>
+
+                <!-- Active Playlist (when playing) -->
+                <div class="card hidden" id="activePlaylistCard" style="margin-top: 1rem;">
+                    <div class="card-header">
+                        <h2 class="card-title">📋 Playlist Activa</h2>
+                    </div>
+                    <div id="activePlaylistItems" class="panel-scroll"></div>
+                    <button class="btn primary" style="width: 100%; margin-top: 1rem;" id="btnStartPlaylist" onclick="startPlaylist()">
+                        ▶️ Iniciar Playlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Playlist Modal -->
+    <div class="modal-overlay hidden" id="addToPlaylistModal">
+        <div class="card" style="max-width: 400px; width: 90%;" role="dialog" aria-modal="true" aria-labelledby="addToPlaylistTitle" aria-describedby="addToPlaylistDesc">
+            <div class="card-header">
+                <h2 class="card-title" id="addToPlaylistTitle">Agregar a Playlist</h2>
+                <button class="btn secondary" aria-label="Cerrar" onclick="closeModal('addToPlaylistModal')">✕</button>
+            </div>
+            <p id="addToPlaylistDesc" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.75rem;">
+                Se guardará la configuración personalizada actual de duración y modo de luz.
+            </p>
+            <div id="playlistSelectList" style="max-height: 300px; overflow-y: auto;">
+                <div class="loading">Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Playlist Modal -->
+    <div class="modal-overlay hidden" id="createPlaylistModal">
+        <div class="card" style="max-width: 400px; width: 90%;" role="dialog" aria-modal="true" aria-labelledby="createPlaylistTitle">
+            <div class="card-header">
+                <h2 class="card-title" id="createPlaylistTitle">Nueva Playlist</h2>
+                <button class="btn secondary" aria-label="Cerrar" onclick="closeModal('createPlaylistModal')">✕</button>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; color: #94a3b8; margin-bottom: 0.5rem;">Nombre</label>
+                <input type="text" id="newPlaylistName" placeholder="Mi playlist" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; color: #fff;">
+            </div>
+            <button class="btn primary" style="width: 100%;" onclick="createPlaylist()">Crear Playlist</button>
+        </div>
+    </div>
+
+    <!-- Customize Therapy Modal -->
+    <div class="modal-overlay hidden" id="customizeModal">
+        <div class="card" style="max-width: 500px; width: 95%;" role="dialog" aria-modal="true" aria-labelledby="customizeModalTitle" aria-describedby="customizeModalDesc">
+            <div class="card-header">
+                <h2 class="card-title" id="customizeModalTitle">🎚️ Personalizar Terapia</h2>
+                <button class="btn secondary" aria-label="Cerrar" onclick="closeModal('customizeModal')">✕</button>
+            </div>
+            
+            <!-- Therapy Name -->
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <span id="customizeTherapyName" style="font-size: 1.25rem; font-weight: 600; color: #e2e8f0;"></span>
+                <p id="customizeModalDesc" style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.25rem;">Configuración temporal para esta sesión</p>
+            </div>
+            
+            <!-- Duration Type -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">⏱️ Duración</label>
+                <div id="durationButtons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                    <button class="duration-btn active" data-duration="corto" onclick="selectDuration('corto')">
+                        <span class="dur-label">Corto</span>
+                        <span class="dur-time">0-5 min</span>
+                    </button>
+                    <button class="duration-btn" data-duration="mediano" onclick="selectDuration('mediano')">
+                        <span class="dur-label">Mediano</span>
+                        <span class="dur-time">6-20 min</span>
+                    </button>
+                    <button class="duration-btn" data-duration="largo" onclick="selectDuration('largo')">
+                        <span class="dur-label">Largo</span>
+                        <span class="dur-time">21min-3hrs</span>
+                    </button>
+                </div>
+                <p id="durationNote" style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; text-align: center;">
+                    El audio se detendrá automáticamente al llegar al límite
+                </p>
+            </div>
+            
+            <!-- Light Mode -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">💡 Modo de Luz (temporal)</label>
+                <div id="lightModeGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                    <!-- Filled dynamically -->
+                </div>
+                <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; text-align: center;">
+                    Solo para esta sesión. El modo default no se modifica.
+                </p>
+            </div>
+            
+            <!-- Intensity -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: flex; justify-content: space-between; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">
+                    <span>🔆 Intensidad Inicial</span>
+                    <span id="intensityValue" style="color: #e2e8f0;">50%</span>
+                </label>
+                <input type="range" id="intensitySlider" min="0" max="100" value="50" 
+                       style="width: 100%; accent-color: #6366f1;"
+                       oninput="updateIntensityValue()">
+            </div>
+            
+            <!-- Video Option -->
+            <div id="videoOptionSection" class="hidden" style="margin-bottom: 1.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.75rem; color: #a5b4fc; font-weight: 500; cursor: pointer;">
+                    <input type="checkbox" id="playVideoCheckbox" style="width: 18px; height: 18px; accent-color: #6366f1;" onchange="toggleVideoOption()">
+                    <span>🎬 Reproducir video de fondo</span>
+                </label>
+                <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem; margin-left: 2rem;">Esta terapia incluye video visual</p>
+            </div>
+
+            <!-- Preview -->
+            <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem;">Vista previa</div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div id="previewIcon" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: #06b6d4;">🔄</div>
+                    <div>
+                        <div id="previewModeName" style="color: #e2e8f0; font-weight: 600;">Patrón Complejo</div>
+                        <div id="previewModeDesc" style="color: #94a3b8; font-size: 0.85rem;">11 patrones variables</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="btn-group" style="justify-content: flex-end;">
+                <button class="btn secondary" onclick="closeModal('customizeModal')">Cancelar</button>
+                <button class="btn secondary" onclick="saveCustomizationToPlaylist()">💾 Guardar en playlist</button>
+                <button class="btn primary" onclick="startCustomizedTherapy()">▶️ Iniciar Terapia</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .duration-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .duration-btn:hover {
+            border-color: rgba(99,102,241,0.5);
+            background: rgba(99,102,241,0.1);
+        }
+        
+        .duration-btn.active {
+            border-color: #6366f1;
+            background: rgba(99,102,241,0.2);
+        }
+        
+        .duration-btn .dur-label {
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .duration-btn .dur-time {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        
+        .duration-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .light-mode-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .light-mode-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .light-mode-btn.active {
+            border-color: #a855f7;
+            background: rgba(168,85,247,0.2);
+        }
+        
+        .light-mode-btn .mode-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .light-mode-btn .mode-name {
+            color: #e2e8f0;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+    </style>
+
+    <script src="./js/api.js"></script>
+    <script>
+        // ─────────────────────────────────────────────────────
+        // State
+        // ─────────────────────────────────────────────────────
+        let user = null;
+        let therapies = [];
+        let playlists = [];
+        let sessions = [];
+        let selectedTherapy = null;
+        let selectedPlaylist = null;
+        let categories = new Set(['all']);
+        
+        // Customization state (temporal, solo para la sesión)
+        let customDurationType = 'corto';
+        let customLightMode = 'general';
+        let customIntensity = 50;
+        let customPlayVideo = false;
+        let customLightTouched = false;
+        let customDurationTouched = false;
+        let lastFocusedElement = null;
+
+        // ─────────────────────────────────────────────────────
+        // Init
+        // ─────────────────────────────────────────────────────
+        async function init() {
+            if (!KryonAPI.requireAuth()) return;
+
+            try {
+                user = await KryonAPI.getProfile();
+                updateCreditsDisplay();
+                updatePlanDisplay();
+                
+                await Promise.all([
+                    loadTherapies(),
+                    loadPlaylists(),
+                    loadHistory()
+                ]);
+                
+                setupTabs();
+                renderLightModes();
+            } catch (error) {
+                console.error('Init error:', error);
+                KryonAPI.logout();
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // User Info
+        // ─────────────────────────────────────────────────────
+        function updateCreditsDisplay() {
+            const badge = document.getElementById('creditsBadge');
+            const count = document.getElementById('creditsCount');
+            const warning = document.getElementById('noCreditsWarning');
+            
+            count.textContent = user.credits_balance;
+            
+            if (user.credits_balance < 1) {
+                badge.classList.add('low');
+                warning.classList.remove('hidden');
+            } else {
+                badge.classList.remove('low');
+                warning.classList.add('hidden');
+            }
+        }
+
+        function updatePlanDisplay() {
+            const badge = document.getElementById('planBadge');
+            if (!badge) return;
+
+            const planName = (user && user.plan_name) ? user.plan_name : 'Sin plan';
+            const access = parseTherapiesAccess(user?.therapies_access);
+
+            let accessText = 'Acceso: —';
+            if (access.mode === 'all') accessText = 'Acceso: Todo';
+            else if (access.mode === 'basic') accessText = 'Acceso: Básico';
+            else if (access.mode === 'ids') accessText = 'Acceso: Seleccionadas';
+
+            badge.textContent = `📦 ${planName} · ${accessText}`;
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Tabs
+        // ─────────────────────────────────────────────────────
+        function setupTabs() {
+            const tabs = document.querySelectorAll('#tabs .tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const panel = tab.dataset.tab;
+                    document.getElementById('panel-therapies').classList.toggle('hidden', panel !== 'therapies');
+                    document.getElementById('panel-playlists').classList.toggle('hidden', panel !== 'playlists');
+                    document.getElementById('panel-history').classList.toggle('hidden', panel !== 'history');
+                });
+            });
+
+            // Category tabs
+            document.getElementById('categoryTabs').addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab')) {
+                    document.querySelectorAll('#categoryTabs .tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterTherapies(e.target.dataset.category);
+                }
+            });
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Therapies
+        // ─────────────────────────────────────────────────────
+        async function loadTherapies() {
+            const grid = document.getElementById('therapyGrid');
+            
+            try {
+                therapies = await KryonAPI.getTherapies();
+                
+                // Extract categories
+                therapies.forEach(t => {
+                    if (t.category) categories.add(t.category);
+                });
+                
+                renderCategoryTabs();
+                renderTherapies(therapies);
+                if (therapies.length > 0) {
+                    selectTherapy(therapies[0].id);
+                }
+                
+                document.getElementById('therapyCount').textContent = `${therapies.length} terapias`;
+            } catch (error) {
+                const detail = error && error.message ? error.message : 'Error desconocido';
+                grid.innerHTML = `<div class="empty-state">Error al cargar terapias: ${detail}</div>`;
+            }
+        }
+
+        function renderCategoryTabs() {
+            const container = document.getElementById('categoryTabs');
+            container.innerHTML = Array.from(categories).map(cat => `
+                <div class="tab ${cat === 'all' ? 'active' : ''}" data-category="${cat}">
+                    ${cat === 'all' ? 'Todas' : cat}
+                </div>
+            `).join('');
+        }
+
+        function parseTherapiesAccess(value) {
+            const raw = value == null ? '' : String(value).trim();
+            if (!raw) return { mode: 'basic', ids: null };
+            if (raw === 'all' || raw === 'premium') return { mode: 'all', ids: null };
+            if (raw === 'basic') return { mode: 'basic', ids: null };
+
+            if (raw.startsWith('[')) {
+                try {
+                    const ids = JSON.parse(raw);
+                    if (Array.isArray(ids)) {
+                        return {
+                            mode: 'ids',
+                            ids: new Set(ids.map((x) => parseInt(x)).filter((n) => Number.isFinite(n))),
+                        };
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            // Fallback: si viene algo inesperado, no bloquear
+            return { mode: 'all', ids: null };
+        }
+
+        function isTherapyLocked(t, parsedAccess = null) {
+            // Admin/superadmin: nunca bloquea
+            if (user?.role === 'admin' || user?.role === 'superadmin') return false;
+
+            const access = parsedAccess || parseTherapiesAccess(user?.therapies_access);
+            const tier = String(t?.access_level || 'basic').toLowerCase();
+
+            if (access.mode === 'all') return false;
+            if (access.mode === 'basic') return tier === 'premium';
+            if (access.mode === 'ids') return !access.ids?.has(parseInt(t.id));
+            return false;
+        }
+
+        function getTherapyLockLabel(t, parsedAccess = null) {
+            const access = parsedAccess || parseTherapiesAccess(user?.therapies_access);
+            const tier = String(t?.access_level || 'basic').toLowerCase();
+            const locked = isTherapyLocked(t, access);
+            if (!locked) return '';
+
+            if (access.mode === 'basic' && tier === 'premium') return '🔒 Premium';
+            if (access.mode === 'ids') return '🔒 No incluido';
+            return '🔒 Bloqueada';
+        }
+
+        function renderTherapies(items) {
+            const grid = document.getElementById('therapyGrid');
+            
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No hay terapias disponibles</div>';
+                return;
+            }
+            
+            const parsedAccess = parseTherapiesAccess(user?.therapies_access);
+            grid.innerHTML = items.map(t => {
+                const hasAnyAudio = t.audio_corto_url || t.audio_mediano_url || t.audio_largo_url || t.audio_path;
+                const hasVideo = t.video_url || t.video_path;
+                const isVideoOnly = hasVideo && !hasAnyAudio;
+                const isAudioOnly = hasAnyAudio && !hasVideo;
+                const locked = isTherapyLocked(t, parsedAccess);
+                
+                // Determine media type badge
+                let mediaIcon = '';
+                if (isVideoOnly) {
+                    mediaIcon = '<span class="badge video-only">🎬 Solo Video</span>';
+                } else if (isAudioOnly) {
+                    mediaIcon = '<span class="badge audio-only">🎵 Audio</span>';
+                } else if (hasAnyAudio && hasVideo) {
+                    mediaIcon = '<span class="badge both">🎵🎬</span>';
+                }
+
+                const lockLabel = getTherapyLockLabel(t, parsedAccess);
+                const lockBadge = locked ? `<span class="badge locked">${lockLabel}</span>` : '';
+                
+                return `
+                <div class="therapy-item ${locked ? 'locked' : ''} ${selectedTherapy?.id === t.id ? 'selected' : ''}" 
+                     onclick="selectTherapy(${t.id})" data-id="${t.id}">
+                    <div class="name">
+                        <span>${t.name}</span>
+                    </div>
+                    <div class="desc">${t.description || 'Sin descripción'}</div>
+                    <div class="meta">
+                        ${lockBadge}
+                        ${mediaIcon}
+                        <span class="badge duration">${KryonAPI.formatDuration(t.default_duration_sec)}</span>
+                        ${t.category ? `<span class="badge">${t.category}</span>` : ''}
+                        ${t.color_mode ? `<span class="badge color">${t.color_mode}</span>` : ''}
+                    </div>
+                    <div class="therapy-actions">
+                        <button class="btn primary sm" onclick="event.stopPropagation(); quickStartTherapy(${t.id});">▶️ Iniciar</button>
+                        ${t.customizable !== false ? `<button class="btn secondary sm" onclick="event.stopPropagation(); openCustomizeFor(${t.id});">🎚️ Personalizar</button>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function filterTherapies(category) {
+            const filtered = category === 'all' 
+                ? therapies 
+                : therapies.filter(t => t.category === category);
+            renderTherapies(filtered);
+        }
+
+        function selectTherapy(id) {
+            selectedTherapy = therapies.find(t => t.id === id);
+            
+            // Update UI
+            document.querySelectorAll('.therapy-item').forEach(el => {
+                el.classList.toggle('selected', parseInt(el.dataset.id) === id);
+            });
+            
+            // Determine media type
+            const hasAnyAudio = selectedTherapy.audio_corto_url || selectedTherapy.audio_mediano_url || 
+                               selectedTherapy.audio_largo_url || selectedTherapy.audio_path;
+            const hasVideo = selectedTherapy.video_url || selectedTherapy.video_path;
+            const isVideoOnly = hasVideo && !hasAnyAudio;
+            const isAudioOnly = hasAnyAudio && !hasVideo;
+            
+            // Media type badge (removed summary panel, so no DOM update here)
+            
+            // Reset customization to therapy defaults
+            customLightMode = selectedTherapy.color_mode || 'general';
+            customIntensity = selectedTherapy.default_intensity || 50;
+            customDurationType = 'corto';
+            customLightTouched = false;
+            customDurationTouched = false;
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Customization Modal
+        // ─────────────────────────────────────────────────────
+        function renderLightModes() {
+            const grid = document.getElementById('lightModeGrid');
+            const modes = KryonAPI.getLightModesLocal();
+            
+            grid.innerHTML = modes.map(m => `
+                <button class="light-mode-btn ${m.id === customLightMode ? 'active' : ''}" 
+                        data-mode="${m.id}"
+                        onclick="selectLightMode('${m.id}')"
+                        aria-pressed="${m.id === customLightMode}"
+                        aria-label="${m.name}. ${m.description}"
+                        style="border-color: ${m.id === customLightMode ? m.color : 'rgba(255,255,255,0.1)'};">
+                    <span class="mode-icon">${m.icon}</span>
+                    <span class="mode-name">${m.name}</span>
+                </button>
+            `).join('');
+        }
+        
+        function showCustomizeModal() {
+            if (!selectedTherapy) return;
+            
+            // Set therapy name
+            document.getElementById('customizeTherapyName').textContent = selectedTherapy.name;
+            
+            // Reset to therapy defaults
+            customLightMode = selectedTherapy.color_mode || 'general';
+            customIntensity = selectedTherapy.default_intensity || 50;
+            customDurationType = 'corto';
+            customPlayVideo = false;
+            customLightTouched = false;
+            customDurationTouched = false;
+            
+            // Update UI
+            document.getElementById('intensitySlider').value = customIntensity;
+            document.getElementById('intensityValue').textContent = customIntensity + '%';
+            
+            // Show/hide video option and handle video-only therapies
+            const hasVideo = selectedTherapy.video_url || selectedTherapy.video_path;
+            const hasAnyAudio = checkHasAudioForDuration(selectedTherapy, 'corto') || 
+                               checkHasAudioForDuration(selectedTherapy, 'mediano') || 
+                               checkHasAudioForDuration(selectedTherapy, 'largo');
+            
+            const videoSection = document.getElementById('videoOptionSection');
+            const videoCheckbox = document.getElementById('playVideoCheckbox');
+            const durationSection = document.getElementById('durationButtons').parentElement;
+            
+            if (hasVideo) {
+                videoSection.classList.remove('hidden');
+                // If video-only (no audio), auto-enable video
+                if (!hasAnyAudio) {
+                    videoCheckbox.checked = true;
+                    customPlayVideo = true;
+                    // Hide duration section since there's no audio
+                    durationSection.style.display = 'none';
+                } else {
+                    videoCheckbox.checked = false;
+                    customPlayVideo = false;
+                    durationSection.style.display = '';
+                }
+            } else {
+                videoSection.classList.add('hidden');
+                durationSection.style.display = '';
+            }
+            
+            // Update duration buttons with availability
+            updateDurationButtons();
+            
+            // Update light mode selection
+            renderLightModes();
+            updatePreview();
+            
+            openModal('customizeModal', '#intensitySlider');
+        }
+
+        function openCustomizeFor(id) {
+            selectTherapy(id);
+            showCustomizeModal();
+        }
+        
+        function toggleVideoOption() {
+            customPlayVideo = document.getElementById('playVideoCheckbox').checked;
+        }
+        
+        function updateDurationButtons() {
+            const buttons = document.querySelectorAll('#durationButtons .duration-btn');
+            const labels = KryonAPI.getDurationLabels(selectedTherapy);
+            
+            buttons.forEach(btn => {
+                const type = btn.dataset.duration;
+                const hasAudio = checkHasAudioForDuration(selectedTherapy, type);
+                
+                // Update label if custom
+                const labelEl = btn.querySelector('.dur-label');
+                if (labels[type] && labels[type] !== '') {
+                    labelEl.textContent = labels[type];
+                }
+                
+                // Disable if no audio for this duration
+                btn.classList.toggle('disabled', !hasAudio);
+                btn.classList.toggle('active', type === customDurationType);
+                btn.disabled = !hasAudio;
+                btn.setAttribute('aria-disabled', (!hasAudio).toString());
+                btn.setAttribute('aria-pressed', (type === customDurationType).toString());
+            });
+        }
+        
+        function checkHasAudioForDuration(therapy, type) {
+            switch(type) {
+                case 'corto': return !!therapy.audio_corto_url;
+                case 'mediano': return !!therapy.audio_mediano_url;
+                case 'largo': return !!therapy.audio_largo_url;
+                default: return false;
+            }
+        }
+        
+        function selectDuration(type) {
+            const hasAudio = checkHasAudioForDuration(selectedTherapy, type);
+            if (!hasAudio) {
+                alert(`No hay audio disponible para duración "${type}"`);
+                return;
+            }
+            
+            customDurationType = type;
+            customDurationTouched = true;
+            updateDurationButtons();
+            
+            // Update note
+            const limits = KryonAPI.getDurationLimits(type);
+            document.getElementById('durationNote').textContent = 
+                `Límite: ${limits.label}. Se detendrá automáticamente al llegar al máximo.`;
+        }
+        
+        function selectLightMode(modeId) {
+            customLightMode = modeId;
+            customLightTouched = true;
+            renderLightModes();
+            updatePreview();
+        }
+        
+        function updateIntensityValue() {
+            const slider = document.getElementById('intensitySlider');
+            customIntensity = parseInt(slider.value);
+            document.getElementById('intensityValue').textContent = customIntensity + '%';
+        }
+        
+        function updatePreview() {
+            const mode = KryonAPI.getLightModeById(customLightMode);
+            document.getElementById('previewIcon').textContent = mode.icon;
+            document.getElementById('previewIcon').style.background = mode.color;
+            document.getElementById('previewModeName').textContent = mode.name;
+            document.getElementById('previewModeDesc').textContent = mode.description;
+        }
+        
+        function startCustomizedTherapy() {
+            if (!selectedTherapy || user.credits_balance < 1) return;
+            if (isTherapyLocked(selectedTherapy)) {
+                const planName = user?.plan_name ? ` (${user.plan_name})` : '';
+                alert(`Esta terapia está bloqueada por tu plan${planName}.`);
+                return;
+            }
+            
+            // Check if video-only therapy
+            const hasAnyAudio = checkHasAudioForDuration(selectedTherapy, 'corto') || 
+                               checkHasAudioForDuration(selectedTherapy, 'mediano') || 
+                               checkHasAudioForDuration(selectedTherapy, 'largo');
+            const hasVideo = selectedTherapy.video_url || selectedTherapy.video_path;
+            
+            // Video-only validation
+            if (!hasAnyAudio && !hasVideo) {
+                alert('Esta terapia no tiene audio ni video disponible.');
+                return;
+            }
+            
+            // Get audio config for selected duration (may be null for video-only)
+            const audioConfig = hasAnyAudio 
+                ? KryonAPI.getAudioForDuration(selectedTherapy, customDurationType)
+                : { audioUrl: null, maxDuration: selectedTherapy.default_duration_sec || 600 };
+            
+            // Create session config
+            const sessionConfig = {
+                ...selectedTherapy,
+                // Temporal overrides (no modifica el default)
+                _customization: {
+                    durationType: hasAnyAudio ? customDurationType : 'video',
+                    lightMode: customLightMode,
+                    intensity: customIntensity,
+                    maxDuration: audioConfig.maxDuration,
+                    audioUrl: audioConfig.audioUrl,
+                    playVideo: customPlayVideo || (!hasAnyAudio && hasVideo), // Force video if no audio
+                    videoOnly: !hasAnyAudio && hasVideo,
+                },
+            };
+            
+            sessionStorage.setItem('selectedTherapy', JSON.stringify(sessionConfig));
+            sessionStorage.removeItem('selectedPlaylist');
+            window.location.href = '/session.html';
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Start Therapy (Quick Start - uses defaults)
+        // ─────────────────────────────────────────────────────
+        async function startTherapy() {
+            if (!selectedTherapy || user.credits_balance < 1) return;
+            if (isTherapyLocked(selectedTherapy)) {
+                const planName = user?.plan_name ? ` (${user.plan_name})` : '';
+                alert(`Esta terapia está bloqueada por tu plan${planName}.`);
+                return;
+            }
+            
+            // Check if video-only therapy
+            const hasAnyAudio = checkHasAudioForDuration(selectedTherapy, 'corto') || 
+                               checkHasAudioForDuration(selectedTherapy, 'mediano') || 
+                               checkHasAudioForDuration(selectedTherapy, 'largo');
+            const hasVideo = selectedTherapy.video_url || selectedTherapy.video_path;
+            const isVideoOnly = hasVideo && !hasAnyAudio;
+            
+            // Use default settings
+            const audioConfig = hasAnyAudio 
+                ? KryonAPI.getAudioForDuration(selectedTherapy, 'corto')
+                : { audioUrl: null, maxDuration: selectedTherapy.default_duration_sec || 600 };
+            
+            const sessionConfig = {
+                ...selectedTherapy,
+                _customization: {
+                    durationType: isVideoOnly ? 'video' : 'corto',
+                    lightMode: selectedTherapy.color_mode || 'general',
+                    intensity: selectedTherapy.default_intensity || 50,
+                    maxDuration: audioConfig.maxDuration,
+                    audioUrl: audioConfig.audioUrl,
+                    playVideo: isVideoOnly, // Auto-play video if video-only
+                    videoOnly: isVideoOnly,
+                },
+            };
+            
+            sessionStorage.setItem('selectedTherapy', JSON.stringify(sessionConfig));
+            sessionStorage.removeItem('selectedPlaylist');
+            window.location.href = '/session.html';
+        }
+
+        async function quickStartTherapy(id) {
+            selectTherapy(id);
+            await startTherapy();
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Playlists
+        // ─────────────────────────────────────────────────────
+        async function loadPlaylists() {
+            const container = document.getElementById('playlistGrid');
+            
+            try {
+                playlists = await KryonAPI.getPlaylists();
+                renderPlaylists();
+            } catch (error) {
+                container.innerHTML = '<div class="empty-state">Error al cargar playlists</div>';
+            }
+        }
+
+        function renderPlaylists() {
+            const container = document.getElementById('playlistGrid');
+            
+            if (playlists.length === 0) {
+                container.innerHTML = '<div class="empty-state">No tienes playlists. ¡Crea una!</div>';
+                return;
+            }
+            
+            container.innerHTML = playlists.map(p => `
+                <div class="playlist-item">
+                    <div>
+                        <div class="name">${p.name}</div>
+                        <div class="count">${p.items_count || 0} terapias</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn secondary btn-sm" onclick="viewPlaylist(${p.id})">Ver</button>
+                        <button class="btn primary btn-sm" onclick="selectPlaylistToPlay(${p.id})">▶️</button>
+                        <button class="btn danger btn-sm" onclick="deletePlaylistConfirm(${p.id})">🗑</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function viewPlaylist(id) {
+            try {
+                const playlist = await KryonAPI.getPlaylist(id);
+                selectedPlaylist = playlist;
+                
+                const card = document.getElementById('activePlaylistCard');
+                const itemsContainer = document.getElementById('activePlaylistItems');
+                
+                if (playlist.items && playlist.items.length > 0) {
+                    itemsContainer.innerHTML = playlist.items.map((item, i) => {
+                        const mode = item.color_mode_override
+                            ? KryonAPI.getLightModeById(item.color_mode_override)
+                            : null;
+                        const modeBadge = mode
+                            ? `<span class="badge color">${mode.name}</span>`
+                            : '';
+                        return `
+                        <div class="history-item">
+                            <div class="info">
+                                <div class="name">${i + 1}. ${item.therapy_name || 'Terapia'}${(() => {
+                                    const t = therapies.find(x => x.id === item.therapy_id);
+                                    return t && isTherapyLocked(t) ? ' 🔒' : '';
+                                })()}</div>
+                                <div class="date">${KryonAPI.formatDuration(item.duration_override || 600)}${modeBadge ? ' • ' + modeBadge : ''}</div>
+                            </div>
+                            <button class="btn danger btn-sm" onclick="removeFromPlaylistConfirm(${id}, ${item.id})">✕</button>
+                        </div>
+                    `;
+                    }).join('');
+                } else {
+                    itemsContainer.innerHTML = '<div class="empty-state">Playlist vacía</div>';
+                }
+                
+                card.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading playlist:', error);
+            }
+        }
+
+        async function selectPlaylistToPlay(id) {
+            const playlist = playlists.find(p => p.id === id);
+            if (!playlist || playlist.items_count === 0) {
+                alert('La playlist está vacía');
+                return;
+            }
+            
+            // Cargar playlist completa con items
+            try {
+                const fullPlaylist = await KryonAPI.getPlaylist(id);
+                if (fullPlaylist.items && fullPlaylist.items.length > 0) {
+                    const lockedNames = (fullPlaylist.items || [])
+                        .map((item) => {
+                            const t = therapies.find(x => x.id === item.therapy_id);
+                            if (!t) return null;
+                            if (!isTherapyLocked(t)) return null;
+                            return item.therapy_name || t.name || `ID ${item.therapy_id}`;
+                        })
+                        .filter(Boolean);
+
+                    if (lockedNames.length > 0) {
+                        const planName = user?.plan_name ? ` (${user.plan_name})` : '';
+                        alert('Tu playlist contiene terapias bloqueadas por tu plan' + planName + ':\n- ' + lockedNames.join('\n- '));
+                        return;
+                    }
+                    sessionStorage.setItem('selectedPlaylist', JSON.stringify(fullPlaylist));
+                    sessionStorage.removeItem('selectedTherapy');
+                    window.location.href = '/session.html';
+                } else {
+                    alert('La playlist está vacía');
+                }
+            } catch (error) {
+                alert('Error al cargar playlist: ' + error.message);
+            }
+        }
+
+        function showCreatePlaylistModal() {
+            document.getElementById('newPlaylistName').value = '';
+            openModal('createPlaylistModal', '#newPlaylistName');
+        }
+
+        async function createPlaylist() {
+            const name = document.getElementById('newPlaylistName').value.trim();
+            if (!name) return;
+            
+            try {
+                await KryonAPI.createPlaylist(name);
+                closeModal('createPlaylistModal');
+                await loadPlaylists();
+            } catch (error) {
+                alert('Error al crear playlist: ' + error.message);
+            }
+        }
+
+        async function deletePlaylistConfirm(id) {
+            if (confirm('¿Eliminar esta playlist?')) {
+                try {
+                    await KryonAPI.deletePlaylist(id);
+                    await loadPlaylists();
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        function showAddToPlaylistModal() {
+            if (!selectedTherapy) return;
+
+            if (isTherapyLocked(selectedTherapy)) {
+                const planName = user?.plan_name ? ` (${user.plan_name})` : '';
+                alert(`Esta terapia está bloqueada por tu plan${planName}.`);
+                return;
+            }
+            
+            const container = document.getElementById('playlistSelectList');
+            
+            const hasPlaylists = playlists.length > 0;
+            if (!hasPlaylists) {
+                container.innerHTML = '<div class="empty-state">No tienes playlists. Crea una primero.</div>';
+            } else {
+                container.innerHTML = playlists.map(p => `
+                    <div class="playlist-item" role="button" tabindex="0" onclick="addToPlaylist(${p.id})" onkeydown="if (event.key === 'Enter' || event.key === ' ') addToPlaylist(${p.id})">
+                        <div class="name">${p.name}</div>
+                        <span class="badge">${p.items_count || 0}</span>
+                    </div>
+                `).join('');
+            }
+            
+            openModal('addToPlaylistModal', hasPlaylists ? '.playlist-item' : 'button[aria-label="Cerrar"]');
+        }
+
+        function saveCustomizationToPlaylist() {
+            if (!selectedTherapy) return;
+            closeModal('customizeModal');
+            showAddToPlaylistModal();
+        }
+
+        async function addToPlaylist(playlistId) {
+            if (!selectedTherapy) return;
+
+            if (isTherapyLocked(selectedTherapy)) {
+                const planName = user?.plan_name ? ` (${user.plan_name})` : '';
+                alert(`Esta terapia está bloqueada por tu plan${planName}.`);
+                return;
+            }
+            
+            try {
+                const hasAnyAudio = checkHasAudioForDuration(selectedTherapy, 'corto') ||
+                    checkHasAudioForDuration(selectedTherapy, 'mediano') ||
+                    checkHasAudioForDuration(selectedTherapy, 'largo');
+
+                const durationOverride = customDurationTouched
+                    ? (hasAnyAudio
+                        ? KryonAPI.getAudioForDuration(selectedTherapy, customDurationType).maxDuration
+                        : (selectedTherapy.default_duration_sec || 600))
+                    : null;
+
+                const colorMode = customLightTouched
+                    ? (customLightMode || selectedTherapy.color_mode || 'general')
+                    : null;
+
+                await KryonAPI.addToPlaylist(playlistId, selectedTherapy.id, {
+                    duration: durationOverride,
+                    colorMode,
+                });
+                closeModal('addToPlaylistModal');
+                await loadPlaylists();
+                alert('Terapia agregada a la playlist');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function removeFromPlaylistConfirm(playlistId, itemId) {
+            if (confirm('¿Eliminar esta terapia de la playlist?')) {
+                try {
+                    await KryonAPI.removeFromPlaylist(playlistId, itemId);
+                    await loadPlaylists();
+                    viewPlaylist(playlistId);
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        function startPlaylist() {
+            if (selectedPlaylist) {
+                selectPlaylistToPlay(selectedPlaylist.id);
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // History
+        // ─────────────────────────────────────────────────────
+        async function loadHistory() {
+            const container = document.getElementById('historyList');
+            
+            try {
+                sessions = await KryonAPI.getMySessions(10);
+                
+                if (sessions.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No tienes sesiones anteriores</div>';
+                    return;
+                }
+                
+                container.innerHTML = sessions.map(s => `
+                    <div class="history-item">
+                        <div class="info">
+                            <div class="name">${s.therapy_name}</div>
+                            <div class="date">${new Date(s.started_at).toLocaleString('es-MX')}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="status ${s.status}">${s.status}</div>
+                            <div class="date">${KryonAPI.formatDuration(s.duration_actual_sec)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="empty-state">Error al cargar historial</div>';
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Modals
+        // ─────────────────────────────────────────────────────
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
+        }
+
+        function openModal(id, focusSelector = null) {
+            lastFocusedElement = document.activeElement;
+            const modal = document.getElementById(id);
+            modal.classList.remove('hidden');
+            if (focusSelector) {
+                setTimeout(() => {
+                    const el = modal.querySelector(focusSelector);
+                    if (el) el.focus();
+                }, 0);
+            }
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const openModalEl = document.querySelector('.modal-overlay:not(.hidden)');
+                if (openModalEl) {
+                    closeModal(openModalEl.id);
+                }
+            }
+        });
+
+        // ─────────────────────────────────────────────────────
+        // Start
+        // ─────────────────────────────────────────────────────
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cabina AQ · Ventana externa (panel)</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="container" style="padding: 18px 0 120px;">
+      <div class="topbar">
+        <div>
+          <h1 class="h1">Panel de Ventana Externa</h1>
+          <p class="sub">Maqueta del FAB + panel (sin abrir pop-up real)</p>
+        </div>
+        <a class="btn" href="./index.html">Volver</a>
+      </div>
+
+      <div class="card">
+        <div class="card-content">
+          <p class="sub">Usa el botón flotante abajo a la derecha para abrir/cerrar el panel.</p>
+          <div style="margin-top: 12px;" class="row">
+            <div>
+              <div style="font-weight: 800;">Estado</div>
+              <div class="small">disconnected / connecting / connected (mock)</div>
+            </div>
+            <span class="badge danger">DISCONNECTED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="fab" data-fab title="Abrir panel">
+      <span style="color: var(--cyan-400); font-weight: 900;">▢</span>
+    </button>
+
+    <div class="panel hidden" data-panel>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <span style="font-weight: 900;">Ventana Externa</span>
+        <button class="btn" data-panel-close>Cerrar</button>
+      </div>
+
+      <div style="margin-top: 12px;" class="row">
+        <div>
+          <div style="font-weight:800;">Conexión</div>
+          <div class="small">Handshake / heartbeat (solo visual)</div>
+        </div>
+        <span class="badge">standby</span>
+      </div>
+
+      <div style="margin-top: 10px; display:grid; gap:10px;">
+        <button class="btn primary">Abrir ventana</button>
+        <button class="btn">Enviar update</button>
+        <button class="btn danger">Cerrar ventana</button>
+      </div>
+
+      <p class="sub" style="margin-top: 10px;">En la app real esto usa Window Placement + BroadcastChannel.</p>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

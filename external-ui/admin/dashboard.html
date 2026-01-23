@@ -1,0 +1,3693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | Panel Kryon</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1a0a1e 0%, #0f0518 100%);
+            border-right: 1px solid rgba(168, 85, 247, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-logo span {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-logo h2 {
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            padding: 0 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            padding: 0 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: #a0aec0;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(168, 85, 247, 0.1);
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            color: #e879f9;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-details h4 {
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .user-details p {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(26, 10, 30, 0.8);
+            border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .top-bar h1 {
+            font-size: 1.5rem;
+            color: #e2e8f0;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            color: #f87171;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(26, 10, 30, 0.9) 0%, rgba(15, 5, 24, 0.9) 100%);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+            color: #a855f7;
+        }
+
+        .stat-icon.pink {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.1) 100%);
+            color: #ec4899;
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.1) 100%);
+            color: #6366f1;
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+            color: #22c55e;
+        }
+
+        .stat-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            color: #e2e8f0;
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 85, 247, 0.3);
+        }
+
+        /* Table */
+        .data-table {
+            background: rgba(26, 10, 30, 0.6);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+        }
+
+        .data-table th {
+            background: rgba(0, 0, 0, 0.3);
+            color: #a0aec0;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table tr:hover {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.superadmin {
+            background: rgba(236, 72, 153, 0.2);
+            color: #f472b6;
+        }
+
+        .badge.admin {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+        }
+
+        .badge.user {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+
+        .badge.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .badge.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .action-btn {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .action-btn.edit {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        .action-btn.credits {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .action-btn.credits:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            padding: 1rem;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1a0a1e 0%, #0f0518 100%);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            margin: auto;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            color: #e2e8f0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .modal-close:hover {
+            color: #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+        }
+
+        .form-group input[type="file"] {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .btn-secondary {
+            padding: 0.625rem 1.25rem;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            border-radius: 8px;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 116, 139, 0.3);
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: rgba(26, 10, 30, 0.95);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .toast.error {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Credits display */
+        .credits-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .credits-display.low {
+            color: #f87171;
+        }
+
+        .credits-display svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Action buttons improvements */
+        .action-btn {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.edit {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .action-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .action-btn.credits {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .action-btn.credits:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        .action-btn.plan {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .action-btn.plan:hover {
+            background: rgba(168, 85, 247, 0.3);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(168, 85, 247, 0.3);
+            border-radius: 50%;
+            border-top-color: #a855f7;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive table */
+        .data-table {
+            overflow-x: auto;
+        }
+
+        .data-table table {
+            min-width: 700px;
+        }
+
+        /* Playlist items */
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+
+        .playlist-item:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+            background: rgba(168, 85, 247, 0.15);
+        }
+
+        .playlist-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .playlist-item-order {
+            width: 24px;
+            height: 24px;
+            background: rgba(168, 85, 247, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #c084fc;
+        }
+
+        .playlist-item-info {
+            flex: 1;
+        }
+
+        .playlist-item-name {
+            font-weight: 500;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .playlist-item-duration {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .playlist-item-actions {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .playlist-item-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .playlist-item-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .playlist-item-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .playlist-item-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Professional form helpers */
+        .help-text {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-top: 0.35rem;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(15, 5, 24, 0.6);
+            color: #cbd5e1;
+        }
+
+        .pill.warn {
+            border-color: rgba(239, 68, 68, 0.35);
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+        }
+
+        .media-preview {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .media-card {
+            border: 1px solid rgba(168, 85, 247, 0.15);
+            border-radius: 12px;
+            padding: 0.9rem;
+            background: rgba(15, 5, 24, 0.4);
+        }
+
+        .media-card h5 {
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .media-link {
+            font-size: 0.75rem;
+            color: #c084fc;
+            text-decoration: none;
+        }
+
+        .media-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+            .media-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <span>🛡️</span>
+                    <h2>Admin Panel</h2>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">General</div>
+                    <a class="nav-item active" data-section="dashboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        Dashboard
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Gestión</div>
+                    <a class="nav-item" data-section="users">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Usuarios
+                    </a>
+                    <a class="nav-item" data-section="therapies">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        Terapias
+                    </a>
+                    <a class="nav-item" data-section="plans">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Planes
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Sistema</div>
+                    <a class="nav-item" data-section="playlists">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                        Playlists
+                    </a>
+                    <a class="nav-item" data-section="analytics">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Analytics
+                    </a>
+                    <a class="nav-item" data-section="arduino">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                        </svg>
+                        Arduino
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">SA</div>
+                    <div class="user-details">
+                        <h4 id="userName">Superadmin</h4>
+                        <p id="userRole">superadmin</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="top-bar-actions">
+                    <button class="btn-logout" onclick="logout()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Cerrar sesión
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <section class="section active" id="section-dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon purple">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">Usuarios</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon pink">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="totalTherapies">0</div>
+                            <div class="stat-label">Terapias</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="totalPlans">0</div>
+                            <div class="stat-label">Planes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="activeUsers">0</div>
+                            <div class="stat-label">Usuarios activos</div>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <h2 class="section-title">Actividad reciente</h2>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTable">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #64748b;">Sin actividad reciente</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Users Section -->
+                <section class="section" id="section-users">
+                    <div class="section-header">
+                        <h2 class="section-title">Gestión de usuarios</h2>
+                        <button class="btn-primary" onclick="openModal('createUser')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Nuevo usuario
+                        </button>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Email</th>
+                                    <th>Nombre</th>
+                                    <th>Rol</th>
+                                    <th>Créditos</th>
+                                    <th>Plan</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: #64748b;">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Therapies Section -->
+                <section class="section" id="section-therapies">
+                    <div class="section-header">
+                        <h2 class="section-title">Gestión de terapias</h2>
+                        <button class="btn-primary" onclick="openModal('createTherapy')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Nueva terapia
+                        </button>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Acceso</th>
+                                    <th>Duración</th>
+                                    <th>Audio</th>
+                                    <th>Video</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="therapiesTable">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; color: #64748b;">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Plans Section -->
+                <section class="section" id="section-plans">
+                    <div class="section-header">
+                        <h2 class="section-title">Gestión de planes</h2>
+                        <button class="btn-primary" onclick="openModal('createPlan')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Nuevo plan
+                        </button>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Créditos</th>
+                                    <th>Acceso</th>
+                                    <th>Precio</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plansTable">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: #64748b;">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Playlists Section -->
+                <section class="section" id="section-playlists">
+                    <div class="section-header">
+                        <h2 class="section-title">Gestión de playlists</h2>
+                        <button class="btn-primary" onclick="openModal('createPlaylist')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Nueva playlist
+                        </button>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Terapias</th>
+                                    <th>Duración</th>
+                                    <th>Creador</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="playlistsTable">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #64748b;">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Arduino Section -->
+                <section class="section" id="section-arduino">
+                    <div class="section-header">
+                        <h2 class="section-title">Configuración Arduino</h2>
+                    </div>
+                    <div class="stat-card" style="max-width: 400px;">
+                        <div class="stat-icon blue">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                            </svg>
+                        </div>
+                        <div class="stat-value" id="arduinoStatus">Desconectado</div>
+                        <div class="stat-label">Estado de conexión</div>
+                        <button class="btn-primary" style="margin-top: 1rem;" onclick="connectArduino()">
+                            Conectar Arduino
+                        </button>
+                    </div>
+                    <p style="color: #64748b; margin-top: 1rem;">
+                        La conexión Arduino se realiza desde la interfaz de usuario principal usando Web Serial API.
+                    </p>
+                </section>
+
+                <!-- Analytics Section -->
+                <section class="section" id="section-analytics">
+                    <div class="section-header">
+                        <h2 class="section-title">Analytics y Reportes</h2>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select id="analyticsPeriod" onchange="loadAnalytics()" style="padding: 0.5rem 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; color: #e2e8f0;">
+                                <option value="week">Última semana</option>
+                                <option value="month" selected>Último mes</option>
+                                <option value="quarter">Último trimestre</option>
+                                <option value="year">Último año</option>
+                            </select>
+                            <button class="btn-primary" onclick="exportData()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPIs Grid -->
+                    <div class="stats-grid" style="margin-bottom: 2rem;">
+                        <div class="stat-card">
+                            <div class="stat-icon purple">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="kpiSessionsMonth">0</div>
+                            <div class="stat-label">Sesiones este mes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon pink">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="kpiActiveUsers">0</div>
+                            <div class="stat-label">Usuarios activos (7d)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="kpiCreditsConsumed">0</div>
+                            <div class="stat-label">Créditos consumidos (30d)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="stat-value" id="kpiCompletionRate">0%</div>
+                            <div class="stat-label">Tasa de completado</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <!-- Sessions Timeline Chart -->
+                        <div class="stat-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">Sesiones por día</h3>
+                            <canvas id="chartSessionsTimeline" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Credits Flow Chart -->
+                        <div class="stat-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">Flujo de créditos</h3>
+                            <canvas id="chartCreditsFlow" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Category Distribution Chart -->
+                        <div class="stat-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">Sesiones por categoría</h3>
+                            <canvas id="chartCategoryDistribution" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Hours Distribution Chart -->
+                        <div class="stat-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">Sesiones por hora del día</h3>
+                            <canvas id="chartHoursDistribution" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Tables -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                        <!-- Top Therapies -->
+                        <div class="stat-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">🏆 Terapias más usadas</h3>
+                            <div class="data-table" style="border: none; background: transparent;">
+                                <table style="min-width: auto;">
+                                    <thead>
+                                        <tr>
+                                            <th>Terapia</th>
+                                            <th>Sesiones</th>
+                                            <th>Completado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="topTherapiesTable">
+                                        <tr><td colspan="3" style="text-align: center; color: #64748b;">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Top Users -->
+                        <div class="stat-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">👤 Usuarios más activos</h3>
+                            <div class="data-table" style="border: none; background: transparent;">
+                                <table style="min-width: auto;">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Sesiones</th>
+                                            <th>Créditos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="topUsersTable">
+                                        <tr><td colspan="3" style="text-align: center; color: #64748b;">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Sessions Log -->
+                    <div class="stat-card" style="padding: 1.5rem; margin-top: 1.5rem;">
+                        <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #e2e8f0;">📋 Sesiones recientes</h3>
+                        <div class="data-table" style="border: none; background: transparent;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Terapia</th>
+                                        <th>Inicio</th>
+                                        <th>Duración</th>
+                                        <th>Estado</th>
+                                        <th>Créditos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentSessionsTable">
+                                    <tr><td colspan="6" style="text-align: center; color: #64748b;">Cargando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Create User -->
+    <div class="modal-overlay" id="modal-createUser">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Crear usuario</h3>
+                <button class="modal-close" onclick="closeModal('createUser')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="createUserForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="name">
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select name="role">
+                        <option value="user">Usuario</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Superadmin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Plan (opcional)</label>
+                    <select name="plan_id" id="createUserPlanSelect">
+                        <option value="">Sin plan</option>
+                        <!-- Se carga dinámicamente -->
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('createUser')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Credits -->
+    <div class="modal-overlay" id="modal-addCredits">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Ajustar créditos</h3>
+                <button class="modal-close" onclick="closeModal('addCredits')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="addCreditsForm">
+                <input type="hidden" name="userId" id="creditsUserId">
+                <div class="form-group">
+                    <label>Cantidad (+N agregar, -N restar)</label>
+                    <input type="number" name="delta" required>
+                </div>
+                <div class="form-group">
+                    <label>Motivo</label>
+                    <input type="text" name="reason" required placeholder="Ej: Recarga manual">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('addCredits')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Aplicar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create Therapy -->
+    <div class="modal-overlay" id="modal-createTherapy">
+        <div class="modal" style="max-width: 550px; max-height: 90vh; overflow-y: auto; margin: auto;">
+            <div class="modal-header">
+                <h3>Nueva terapia</h3>
+                <button class="modal-close" onclick="closeModal('createTherapy')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="createTherapyForm">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" required placeholder="Ej: Relajación Profunda">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" rows="2" placeholder="Descripción de la terapia"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select name="category" id="createTherapyCategory">
+                        <option value="">Sin categoría</option>
+                        <!-- Se cargan dinámicamente -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Acceso</label>
+                    <select name="access_level" id="createTherapyAccessLevel">
+                        <option value="basic">Básica</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                    <small style="color: #64748b; font-size: 0.75rem;">Las premium se muestran bloqueadas para planes básicos</small>
+                </div>
+                
+                <!-- Tipo de reproducción -->
+                <div class="form-group">
+                    <label>Tipo de reproducción *</label>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1;">
+                            <input type="radio" name="media_type" value="audio" checked style="accent-color: #a855f7;">
+                            <span>🎵 Solo Audio</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1;">
+                            <input type="radio" name="media_type" value="video" style="accent-color: #a855f7;">
+                            <span>🎬 Solo Video</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1;">
+                            <input type="radio" name="media_type" value="both" style="accent-color: #a855f7;">
+                            <span>🎵🎬 Ambos</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Modo de luz (no modificable por usuario) -->
+                <div class="form-group">
+                    <label>Modo de luz predeterminado</label>
+                    <select name="color_mode" id="createTherapyColorMode">
+                        <option value="default">Por defecto</option>
+                        <!-- Se cargan dinámicamente -->
+                    </select>
+                    <small style="color: #64748b; font-size: 0.75rem;">El usuario puede sobrescribir temporalmente</small>
+                </div>
+                
+                <!-- Intensidad por defecto -->
+                <div class="form-group">
+                    <label>Intensidad por defecto: <span id="createIntensityValue">50</span>%</label>
+                    <input type="range" name="default_intensity" min="0" max="100" value="50" 
+                           oninput="document.getElementById('createIntensityValue').textContent = this.value"
+                           style="width: 100%;">
+                </div>
+                
+                <!-- Tipos de duración habilitados -->
+                <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                    <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">⏱️ Tipos de duración disponibles</h4>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 1rem;">La duración real se detectará automáticamente del audio subido</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="enable_corto" id="createEnableCorto" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
+                            <span style="color: #e2e8f0;">Corto (0-5 min)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="enable_mediano" id="createEnableMediano" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
+                            <span style="color: #e2e8f0;">Mediano (6-20 min)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="enable_largo" id="createEnableLargo" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
+                            <span style="color: #e2e8f0;">Largo (21+ min)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Etiquetas personalizadas -->
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Etiquetas de duración (opcional)</label>
+                    <input type="text" name="duration_labels" placeholder='Ej: {"corto": "Rápido", "mediano": "Normal", "largo": "Extendido"}'>
+                    <small style="color: #64748b; font-size: 0.75rem;">JSON con etiquetas personalizadas</small>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('createTherapy')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Crear y subir archivos →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Upload Media (aparece después de crear) -->
+    <div class="modal-overlay" id="modal-uploadMedia">
+        <div class="modal" style="max-width: 600px; max-height: 90vh; overflow-y: auto; margin: auto;">
+            <div class="modal-header">
+                <h3>📁 Subir archivos de <span id="uploadMediaTherapyName">la terapia</span></h3>
+                <button class="modal-close" onclick="closeUploadModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <input type="hidden" id="uploadMediaTherapyId">
+            <input type="hidden" id="uploadMediaType">
+            
+            <!-- Sección Audio -->
+            <div id="uploadAudioSection">
+                <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                    <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">🎵 Archivos de Audio por Duración</h4>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 1rem;">La duración de la terapia se detectará automáticamente del audio</p>
+                    
+                    <!-- Audio Corto -->
+                    <div class="form-group" id="uploadCortoSection" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="uploadAudioCortoStatus">⏳</span> Audio Corto (0-5 min)
+                            <span id="uploadAudioCortoDuration" style="margin-left: auto; font-size: 0.75rem; color: #a855f7;"></span>
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="uploadAudioCorto" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;" onchange="previewAudioDuration(this, 'corto')">
+                            <button type="button" class="btn-primary" onclick="uploadNewTherapyAudio('corto')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Mediano -->
+                    <div class="form-group" id="uploadMedianoSection" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="uploadAudioMedianoStatus">⏳</span> Audio Mediano (6-20 min)
+                            <span id="uploadAudioMedianoDuration" style="margin-left: auto; font-size: 0.75rem; color: #a855f7;"></span>
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="uploadAudioMediano" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;" onchange="previewAudioDuration(this, 'mediano')">
+                            <button type="button" class="btn-primary" onclick="uploadNewTherapyAudio('mediano')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Largo -->
+                    <div class="form-group" id="uploadLargoSection" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="uploadAudioLargoStatus">⏳</span> Audio Largo (21+ min)
+                            <span id="uploadAudioLargoDuration" style="margin-left: auto; font-size: 0.75rem; color: #a855f7;"></span>
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="uploadAudioLargo" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;" onchange="previewAudioDuration(this, 'largo')">
+                            <button type="button" class="btn-primary" onclick="uploadNewTherapyAudio('largo')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección Video -->
+            <div id="uploadVideoSection">
+                <div style="border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                    <h4 style="color: #ec4899; margin-bottom: 0.75rem; font-size: 0.9rem;">🎬 Archivo de Video</h4>
+                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="uploadVideoStatus">⏳</span> Video
+                            <span id="uploadVideoDuration" style="margin-left: auto; font-size: 0.75rem; color: #ec4899;"></span>
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="uploadVideo" accept=".mp4,.webm,.mov,.avi,.mkv" style="flex: 1; font-size: 0.8rem;" onchange="previewVideoDuration(this)">
+                            <button type="button" class="btn-primary" onclick="uploadNewTherapyVideo()" style="font-size: 0.75rem; padding: 0.4rem 0.75rem; background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeUploadModal()">Terminar después</button>
+                <button type="button" class="btn-primary" onclick="closeUploadModal()" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+                    ✓ Finalizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Therapy -->
+    <div class="modal-overlay" id="modal-editTherapy">
+        <div class="modal" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Editar terapia</h3>
+                <button class="modal-close" onclick="closeModal('editTherapy')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="editTherapyForm">
+                <input type="hidden" name="therapyId" id="editTherapyId">
+
+                <div class="form-group" style="margin-top: 0;">
+                    <div class="field-row">
+                        <span class="pill">ID: <span id="editTherapyIdLabel">—</span></span>
+                        <span id="editTherapyActivePill" class="pill">Estado: —</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                        <span>Estado</span>
+                        <span class="help-text" style="margin: 0;">Desactiva para ocultar en el panel principal</span>
+                    </label>
+                    <div class="field-row">
+                        <label style="display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+                            <input type="checkbox" id="editTherapyIsActive" name="is_active" style="accent-color: #22c55e; width: 18px; height: 18px;">
+                            <span id="editTherapyIsActiveLabel" style="color: #e2e8f0;">Activa</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" id="editTherapyName" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" id="editTherapyDescription" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select name="category" id="editTherapyCategory">
+                        <option value="">Sin categoría</option>
+                        <!-- Se cargan dinámicamente -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Acceso</label>
+                    <select name="access_level" id="editTherapyAccessLevel">
+                        <option value="basic">Básica</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+                
+                <!-- Modo de luz -->
+                <div class="form-group">
+                    <label>Modo de luz predeterminado</label>
+                    <select name="color_mode" id="editTherapyColorMode">
+                        <option value="default">Por defecto</option>
+                        <!-- Se cargan dinámicamente -->
+                    </select>
+                </div>
+                
+                <!-- Intensidad por defecto -->
+                <div class="form-group">
+                    <label>Intensidad por defecto: <span id="editIntensityValue">50</span>%</label>
+                    <input type="range" name="default_intensity" id="editTherapyIntensity" min="0" max="100" value="50" 
+                           oninput="document.getElementById('editIntensityValue').textContent = this.value"
+                           style="width: 100%;">
+                </div>
+                
+                <!-- Duraciones por tipo -->
+                <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                    <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">⏱️ Límites de tiempo por tipo</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 0.8rem;">Corto (máx min)</label>
+                            <input type="number" name="duration_corto_min" id="editDurationCorto" value="5" min="1" max="5" 
+                                   style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 0.8rem;">Mediano (máx min)</label>
+                            <input type="number" name="duration_mediano_min" id="editDurationMediano" value="20" min="6" max="20"
+                                   style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 0.8rem;">Largo (máx min)</label>
+                            <input type="number" name="duration_largo_min" id="editDurationLargo" value="180" min="21" max="180"
+                                   style="width: 100%;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Etiquetas personalizadas -->
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Etiquetas de duración (opcional)</label>
+                    <input type="text" name="duration_labels" id="editDurationLabels" placeholder='{"corto": "Rápido", "mediano": "Normal", "largo": "Extendido"}'>
+                    <div class="help-text">Formato JSON. Ej: <span style="color:#c084fc;">{"corto":"Track 1"}</span></div>
+                </div>
+
+                <!-- Tipo de media (auto-detectado) -->
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Tipo de media</label>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <span id="editMediaTypeBadge" class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
+                            Detectando...
+                        </span>
+                        <select id="editTherapyMediaType" name="media_type" style="padding: 0.45rem 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
+                            <option value="audio">Audio</option>
+                            <option value="video">Video</option>
+                            <option value="both">Audio + Video</option>
+                        </select>
+                        <span id="editMediaDetectedPill" class="pill">Detectado: —</span>
+                        <span id="editMediaMismatchPill" class="pill warn" style="display:none;">⚠️ No coincide</span>
+                        <button type="button" class="btn-secondary" onclick="showAllEditMediaSections()" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                            Mostrar todo
+                        </button>
+                        <span id="editMediaTypeHint" style="font-size: 0.8rem; color: #94a3b8;"></span>
+                    </div>
+                </div>
+
+                <!-- Vista previa de media -->
+                <div class="media-preview">
+                    <h4 style="color: #e2e8f0; margin-bottom: 0.75rem; font-size: 0.95rem;">👁️ Vista previa</h4>
+                    <div class="media-grid">
+                        <div class="media-card">
+                            <h5>
+                                <span>🎵 Audio Corto</span>
+                                <a id="previewAudioCortoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
+                            </h5>
+                            <audio id="previewAudioCorto" controls style="width: 100%; display:none;"></audio>
+                            <div id="previewAudioCortoMeta" class="help-text">—</div>
+                        </div>
+                        <div class="media-card">
+                            <h5>
+                                <span>🎵 Audio Mediano</span>
+                                <a id="previewAudioMedianoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
+                            </h5>
+                            <audio id="previewAudioMediano" controls style="width: 100%; display:none;"></audio>
+                            <div id="previewAudioMedianoMeta" class="help-text">—</div>
+                        </div>
+                        <div class="media-card">
+                            <h5>
+                                <span>🎵 Audio Largo</span>
+                                <a id="previewAudioLargoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
+                            </h5>
+                            <audio id="previewAudioLargo" controls style="width: 100%; display:none;"></audio>
+                            <div id="previewAudioLargoMeta" class="help-text">—</div>
+                        </div>
+                        <div class="media-card">
+                            <h5>
+                                <span>🎬 Video</span>
+                                <a id="previewVideoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
+                            </h5>
+                            <video id="previewVideo" controls muted playsinline style="width: 100%; max-height: 180px; border-radius: 10px; display:none;"></video>
+                            <div id="previewVideoMeta" class="help-text">—</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload Audios por duración -->
+                <div id="editAudioUploadsSection" style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                    <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">🎵 Archivos de Audio por Duración</h4>
+                    
+                    <!-- Audio Corto -->
+                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="audioCortoStatus">🔇</span> Audio Corto (0-5 min)
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="editAudioCorto" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;">
+                            <button type="button" class="btn-secondary" onclick="uploadTherapyAudio('corto')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Mediano -->
+                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="audioMedianoStatus">🔇</span> Audio Mediano (6-20 min)
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="editAudioMediano" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;">
+                            <button type="button" class="btn-secondary" onclick="uploadTherapyAudio('mediano')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Largo -->
+                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                            <span id="audioLargoStatus">🔇</span> Audio Largo (21+ min)
+                        </label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="file" id="editAudioLargo" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;">
+                            <button type="button" class="btn-secondary" onclick="uploadTherapyAudio('largo')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload Video -->
+                <div id="editVideoUploadSection" class="form-group" style="border: 1px dashed #475569; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="videoStatus">🔇</span> Video (opcional)
+                    </label>
+                    <input type="file" name="video" id="editTherapyVideo" accept=".mp4,.webm,.mov,.avi,.mkv" style="margin-top: 0.5rem;">
+                    <button type="button" class="btn-secondary" onclick="uploadTherapyMedia('video')" style="margin-top: 0.5rem; font-size: 0.8rem;">
+                        Subir Video
+                    </button>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editTherapy')">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="editTherapySaveBtn">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create Plan -->
+    <div class="modal-overlay" id="modal-createPlan">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Nuevo plan</h3>
+                <button class="modal-close" onclick="closeModal('createPlan')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="createPlanForm">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" required placeholder="Ej: Plan Premium">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" rows="2" placeholder="Descripción del plan"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Créditos incluidos *</label>
+                    <input type="number" name="credits_included" required min="0" value="100">
+                </div>
+                <div class="form-group">
+                    <label>Precio (MXN) *</label>
+                    <input type="number" name="price" required min="0" step="0.01" value="500" placeholder="500.00">
+                </div>
+                <div class="form-group">
+                    <label>Acceso a terapias</label>
+                    <select name="therapies_access">
+                        <option value="all">Todas las terapias</option>
+                        <option value="basic">Solo básicas</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('createPlan')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Crear plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Plan -->
+    <div class="modal-overlay" id="modal-editPlan">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Editar plan</h3>
+                <button class="modal-close" onclick="closeModal('editPlan')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="editPlanForm">
+                <input type="hidden" name="planId" id="editPlanId">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" id="editPlanName" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="description" id="editPlanDescription" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Créditos incluidos *</label>
+                    <input type="number" name="credits_included" id="editPlanCredits" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Precio (MXN) *</label>
+                    <input type="number" name="price" id="editPlanPrice" required min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Acceso a terapias</label>
+                    <select name="therapies_access" id="editPlanAccess">
+                        <option value="all">Todas las terapias</option>
+                        <option value="basic">Solo básicas</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_active" id="editPlanActive" style="width: auto;">
+                    <label for="editPlanActive" style="margin: 0; cursor: pointer;">Plan activo</label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editPlan')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Assign Plan to User -->
+    <div class="modal-overlay" id="modal-assignPlan">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Asignar plan</h3>
+                <button class="modal-close" onclick="closeModal('assignPlan')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="assignPlanForm">
+                <input type="hidden" name="userId" id="assignPlanUserId">
+                <p style="color: #94a3b8; margin-bottom: 1rem;">Usuario: <strong id="assignPlanUserName" style="color: #e2e8f0;">-</strong></p>
+                <div class="form-group">
+                    <label>Seleccionar plan</label>
+                    <select name="plan_id" id="assignPlanSelect" required>
+                        <option value="">Selecciona un plan...</option>
+                    </select>
+                </div>
+                <p style="font-size: 0.75rem; color: #64748b;">
+                    Al asignar un plan, los créditos del plan se añadirán al usuario.
+                </p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('assignPlan')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Asignar plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create Playlist -->
+    <div class="modal-overlay" id="modal-createPlaylist">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Nueva playlist</h3>
+                <button class="modal-close" onclick="closeModal('createPlaylist')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="createPlaylistForm">
+                <div class="form-group">
+                    <label>Nombre de la playlist *</label>
+                    <input type="text" name="name" required placeholder="Ej: Sesión de relajación">
+                </div>
+                <p style="font-size: 0.75rem; color: #64748b;">
+                    Después de crear la playlist podrás agregar terapias.
+                </p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('createPlaylist')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Crear playlist</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Playlist -->
+    <div class="modal-overlay" id="modal-editPlaylist">
+        <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Editar playlist</h3>
+                <button class="modal-close" onclick="closeModal('editPlaylist')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="editPlaylistForm">
+                <input type="hidden" name="playlistId" id="editPlaylistId">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" id="editPlaylistName" required>
+                </div>
+                
+                <!-- Items list -->
+                <div style="margin-top: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <label style="margin: 0;">Terapias en la playlist</label>
+                        <button type="button" class="btn-primary" style="padding: 0.375rem 0.75rem; font-size: 0.8rem;" onclick="openAddTherapyModal()">
+                            + Agregar terapia
+                        </button>
+                    </div>
+                    <div id="playlistItemsList" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0.5rem; min-height: 100px; max-height: 300px; overflow-y: auto;">
+                        <p style="color: #64748b; text-align: center; padding: 1rem;">Sin terapias</p>
+                    </div>
+                    <p style="font-size: 0.7rem; color: #64748b; margin-top: 0.5rem;">
+                        Arrastra para reordenar • Duración total: <strong id="playlistTotalDuration">0 min</strong>
+                    </p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editPlaylist')">Cerrar</button>
+                    <button type="submit" class="btn-primary">Guardar nombre</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Therapy to Playlist -->
+    <div class="modal-overlay" id="modal-addTherapyToPlaylist">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Agregar terapia</h3>
+                <button class="modal-close" onclick="closeModal('addTherapyToPlaylist')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="addTherapyToPlaylistForm">
+                <div class="form-group">
+                    <label>Seleccionar terapia *</label>
+                    <select name="therapy_id" id="addTherapySelect" required>
+                        <option value="">Selecciona una terapia...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duración personalizada (minutos, opcional)</label>
+                    <input type="number" name="duration_override" min="1" max="120" placeholder="Dejar vacío para usar la duración original">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('addTherapyToPlaylist')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+        let token = localStorage.getItem('token') || localStorage.getItem('kryon_token');
+        let currentUser = null;
+
+        // Cache de categorías para selección/visualización
+        let therapyCategoriesCache = [];
+        let therapyCategorySlugToName = {};
+
+        // ─────────────────────────────────────────────────────
+        // Auth & Init
+        // ─────────────────────────────────────────────────────
+        async function checkAuth() {
+            token = localStorage.getItem('token') || localStorage.getItem('kryon_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Token inválido');
+                
+                currentUser = await response.json();
+                
+                if (currentUser.role !== 'admin' && currentUser.role !== 'superadmin') {
+                    window.location.href = '../selection.html';
+                    return;
+                }
+
+                // Update UI
+                document.getElementById('userName').textContent = currentUser.name || currentUser.email;
+                document.getElementById('userRole').textContent = currentUser.role;
+                document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.email).substring(0, 2).toUpperCase();
+
+                // Load data
+                loadDashboardData();
+            } catch (error) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('kryon_token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('kryon_token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Navigation
+        // ─────────────────────────────────────────────────────
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const section = item.dataset.section;
+                
+                // Update nav
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Update sections
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`section-${section}`).classList.add('active');
+                
+                // Update title
+                document.getElementById('pageTitle').textContent = item.textContent.trim();
+
+                // Load data
+                if (section === 'dashboard') loadDashboardData();
+                if (section === 'users') loadUsers();
+                if (section === 'therapies') loadTherapies();
+                if (section === 'plans') loadPlans();
+                if (section === 'playlists') loadPlaylists();
+                if (section === 'analytics') loadAnalytics();
+            });
+        });
+
+        // ─────────────────────────────────────────────────────
+        // API Calls
+        // ─────────────────────────────────────────────────────
+        async function apiCall(endpoint, options = {}) {
+            token = localStorage.getItem('token') || localStorage.getItem('kryon_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                throw new Error('Sesión expirada');
+            }
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Error de servidor');
+            }
+            
+            return response.json();
+        }
+
+        async function loadDashboardData() {
+            try {
+                const [users, therapies, plans] = await Promise.all([
+                    apiCall('/api/admin/users'),
+                    apiCall('/api/therapies'),
+                    apiCall('/api/admin/plans')
+                ]);
+
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalTherapies').textContent = therapies.length;
+                document.getElementById('totalPlans').textContent = plans.length;
+                document.getElementById('activeUsers').textContent = users.filter(u => u.is_active).length;
+
+                // Fill recent activity table on dashboard
+                loadRecentActivity();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        async function loadRecentActivity() {
+            const tbody = document.getElementById('activityTable');
+            if (!tbody) return;
+
+            try {
+                const sessions = await apiCall('/api/analytics/sessions/recent?limit=10');
+
+                if (!sessions || sessions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #64748b;">Sin actividad reciente</td></tr>';
+                    return;
+                }
+
+                const statusLabel = (status) => {
+                    switch (status) {
+                        case 'completed': return 'Completó';
+                        case 'cancelled': return 'Canceló';
+                        case 'paused': return 'Pausó';
+                        case 'started': return 'Inició';
+                        default: return status || 'Actividad';
+                    }
+                };
+
+                const statusBadge = (status) => {
+                    const cls = status === 'completed' ? 'active' : status === 'cancelled' ? 'inactive' : 'admin';
+                    return `<span class="badge ${cls}">${statusLabel(status)}</span>`;
+                };
+
+                tbody.innerHTML = sessions.map(s => {
+                    const userName = s.user_name || s.user_email || 'Usuario';
+                    const therapyName = s.therapy_name || 'Terapia';
+                    const when = s.started_at ? new Date(s.started_at).toLocaleString('es-MX') : '';
+                    return `
+                        <tr>
+                            <td>${userName}</td>
+                            <td>${statusBadge(s.status)} ${therapyName}</td>
+                            <td>${when}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Recent activity error:', error);
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #f87171;">Error al cargar actividad</td></tr>';
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await apiCall('/api/admin/users');
+                const tbody = document.getElementById('usersTable');
+                
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b;">No hay usuarios</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td>${u.email}</td>
+                        <td>${u.name || '-'}</td>
+                        <td><span class="badge ${u.role}">${u.role}</span></td>
+                        <td>
+                            <span class="credits-display ${u.credits_balance <= 15 ? 'low' : ''}">
+                                ${u.credits_balance <= 15 ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>' : ''}
+                                ${u.credits_balance}
+                            </span>
+                        </td>
+                        <td>${u.plan_name || '<span style="color:#64748b">Sin plan</span>'}</td>
+                        <td><span class="badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? 'Activo' : 'Inactivo'}</span></td>
+                        <td class="actions-cell">
+                            <button class="action-btn credits" onclick="openCreditsModal(${u.id})">+ Créditos</button>
+                            <button class="action-btn plan" onclick="openAssignPlanModal(${u.id}, '${u.name || u.email}')">Plan</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showToast('Error al cargar usuarios', 'error');
+            }
+        }
+
+        async function loadTherapies() {
+            try {
+                const therapies = await apiCall('/api/therapies');
+                const tbody = document.getElementById('therapiesTable');
+                
+                if (therapies.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b;">No hay terapias</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = therapies.map(t => `
+                    <tr>
+                        <td>${t.id}</td>
+                        <td>${t.name}</td>
+                        <td>${t.category || '-'}</td>
+                        <td><span class="badge ${String(t.access_level || 'basic') === 'premium' ? 'warn' : 'active'}">${String(t.access_level || 'basic') === 'premium' ? 'Premium' : 'Básica'}</span></td>
+                        <td>${Math.floor(t.default_duration_sec / 60)} min</td>
+                        <td>${t.audio_url ? '✅' : '❌'}</td>
+                        <td>${t.video_url ? '✅' : '❌'}</td>
+                        <td><span class="badge ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'Activa' : 'Inactiva'}</span></td>
+                        <td>
+                            <button class="action-btn edit" onclick="openEditTherapyModal(${t.id})">Editar</button>
+                            <button class="action-btn delete" onclick="deleteTherapy(${t.id})" style="background: #dc2626; margin-left: 4px;">✕</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showToast('Error al cargar terapias', 'error');
+            }
+        }
+
+        async function loadPlans() {
+            try {
+                const plans = await apiCall('/api/admin/plans');
+                const tbody = document.getElementById('plansTable');
+                
+                if (plans.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">No hay planes</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = plans.map(p => `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.credits_included}</td>
+                        <td>${p.therapies_access}</td>
+                        <td>$${(p.price / 100).toFixed(2)}</td>
+                        <td><span class="badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'Activo' : 'Inactivo'}</span></td>
+                        <td class="actions-cell">
+                            <button class="action-btn edit" onclick="openEditPlanModal(${p.id})">Editar</button>
+                            <button class="action-btn delete" onclick="deletePlan(${p.id}, '${p.name}')">Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showToast('Error al cargar planes', 'error');
+            }
+        }
+
+        async function loadPlaylists() {
+            try {
+                const playlists = await apiCall('/api/playlists');
+                const tbody = document.getElementById('playlistsTable');
+                
+                if (playlists.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">No hay playlists</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = playlists.map(p => `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.items_count} terapias</td>
+                        <td>${p.total_duration_min} min</td>
+                        <td>${p.created_by_name || 'Usuario #' + p.created_by}</td>
+                        <td class="actions-cell">
+                            <button class="action-btn edit" onclick="openEditPlaylistModal(${p.id})">Editar</button>
+                            <button class="action-btn delete" onclick="deletePlaylist(${p.id}, '${p.name}')">Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showToast('Error al cargar playlists', 'error');
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Modals
+        // ─────────────────────────────────────────────────────
+        function openModal(name) {
+            if (name === 'createUser') {
+                loadPlansForUserModal();
+            }
+            if (name === 'createTherapy') {
+                loadTherapyFormOptions();
+            }
+            document.getElementById(`modal-${name}`).classList.add('show');
+        }
+
+        function closeModal(name) {
+            document.getElementById(`modal-${name}`).classList.remove('show');
+        }
+
+        function openCreditsModal(userId) {
+            document.getElementById('creditsUserId').value = userId;
+            openModal('addCredits');
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Form handlers
+        // ─────────────────────────────────────────────────────
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                email: form.email.value,
+                password: form.password.value,
+                name: form.name.value || null,
+                role: form.role.value,
+                plan_id: form.plan_id.value ? parseInt(form.plan_id.value) : null
+            };
+
+            try {
+                await apiCall('/api/admin/users', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showToast('Usuario creado exitosamente', 'success');
+                closeModal('createUser');
+                form.reset();
+                loadUsers();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        document.getElementById('addCreditsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const userId = form.userId.value;
+            const data = {
+                delta: parseInt(form.delta.value),
+                reason: form.reason.value
+            };
+
+            try {
+                await apiCall(`/api/admin/users/${userId}/credits`, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showToast('Créditos actualizados', 'success');
+                closeModal('addCredits');
+                form.reset();
+                loadUsers();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        // ─────────────────────────────────────────────────────
+        // Therapy handlers
+        // ─────────────────────────────────────────────────────
+        
+        // Cargar categorías y modos de luz para los selects
+        async function loadTherapyFormOptions() {
+            try {
+                const categories = await apiCall('/api/categories');
+                const lightModes = await apiCall('/api/categories/light-modes');
+
+                therapyCategoriesCache = Array.isArray(categories) ? categories : [];
+                therapyCategorySlugToName = {};
+                therapyCategoriesCache.forEach((c) => {
+                    if (!c) return;
+                    if (c.slug && c.name) therapyCategorySlugToName[String(c.slug)] = String(c.name);
+                });
+                
+                // Cargar categorías
+                const categorySelects = ['createTherapyCategory', 'editTherapyCategory'];
+                categorySelects.forEach(id => {
+                    const select = document.getElementById(id);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="">Sin categoría</option>' +
+                            therapyCategoriesCache.map(c => `<option value="${String(c.name)}">${c.name}</option>`).join('');
+
+                        const mapped = therapyCategorySlugToName[String(currentValue)] || currentValue;
+                        select.value = mapped;
+                    }
+                });
+                
+                // Cargar modos de luz
+                const colorModeSelects = ['createTherapyColorMode', 'editTherapyColorMode'];
+                colorModeSelects.forEach(id => {
+                    const select = document.getElementById(id);
+                    if (select) {
+                        const currentValue = select.value;
+                        select.innerHTML = '<option value="default">Por defecto</option>' +
+                            lightModes.map(m => `<option value="${m.slug}">${m.name}</option>`).join('');
+                        select.value = currentValue;
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading form options:', error);
+                showToast('No se pudieron cargar categorías/modos de luz', 'error');
+            }
+        }
+        
+        document.getElementById('createTherapyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            
+            // Obtener tipo de media
+            const mediaType = form.media_type.value;
+            
+            // Obtener tipos de duración habilitados
+            const enableCorto = form.enable_corto.checked;
+            const enableMediano = form.enable_mediano.checked;
+            const enableLargo = form.enable_largo.checked;
+            
+            const data = {
+                name: form.name.value,
+                description: form.description.value || null,
+                category: form.category.value || null,
+                access_level: form.access_level?.value || 'basic',
+                default_duration_sec: 300, // Default 5 min, se actualizará con el audio
+                color_mode: form.color_mode.value,
+                default_intensity: parseInt(form.default_intensity.value),
+                media_type: mediaType,
+                enable_corto: enableCorto,
+                enable_mediano: enableMediano,
+                enable_largo: enableLargo,
+                duration_labels: form.duration_labels.value || null
+            };
+
+            try {
+                const response = await apiCall('/api/therapies', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                
+                showToast('Terapia creada exitosamente', 'success');
+                closeModal('createTherapy');
+                form.reset();
+                
+                // Abrir modal de subida de archivos
+                openUploadMediaModal(response.id, response.name, mediaType, { enableCorto, enableMediano, enableLargo });
+                
+                loadTherapies();
+                loadDashboardData();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        document.getElementById('editTherapyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const therapyId = form.therapyId.value;
+
+            // Validación JSON (si se usa)
+            if (form.duration_labels.value && form.duration_labels.value.trim()) {
+                try {
+                    JSON.parse(form.duration_labels.value);
+                } catch {
+                    showToast('Etiquetas de duración: JSON inválido', 'error');
+                    return;
+                }
+            }
+
+            const saveBtn = document.getElementById('editTherapySaveBtn');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="loading-spinner"></span> Guardando...';
+            }
+
+            const data = {
+                name: form.name.value,
+                description: form.description.value || null,
+                category: form.category.value || null,
+                access_level: form.access_level?.value || 'basic',
+                default_duration_sec: parseInt(form.duration_corto_min.value) * 60,
+                color_mode: form.color_mode.value,
+                default_intensity: parseInt(form.default_intensity.value),
+                media_type: form.media_type?.value || null,
+                duration_corto_sec: parseInt(form.duration_corto_min.value) * 60,
+                duration_mediano_sec: parseInt(form.duration_mediano_min.value) * 60,
+                duration_largo_sec: parseInt(form.duration_largo_min.value) * 60,
+                duration_labels: form.duration_labels.value || null,
+                is_active: !!form.is_active?.checked
+            };
+
+            try {
+                await apiCall(`/api/therapies/${therapyId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                showToast('Terapia actualizada', 'success');
+                closeModal('editTherapy');
+                loadTherapies();
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Guardar cambios';
+                }
+            }
+        });
+
+        function detectTherapyMediaType(therapy) {
+            const hasAudio = Boolean(
+                therapy.audio_corto_url ||
+                therapy.audio_mediano_url ||
+                therapy.audio_largo_url ||
+                therapy.audio_url
+            );
+            const hasVideo = Boolean(therapy.video_url);
+
+            if (hasAudio && hasVideo) return 'both';
+            if (hasVideo) return 'video';
+            if (hasAudio) return 'audio';
+            return 'unknown';
+        }
+
+        function normalizeMediaType(value) {
+            if (!value) return null;
+            const v = String(value).toLowerCase();
+            if (v === 'audio' || v === 'video' || v === 'both') return v;
+            return null;
+        }
+
+        function formatSeconds(seconds) {
+            const s = Math.max(0, Math.floor(seconds || 0));
+            const m = Math.floor(s / 60);
+            const r = s % 60;
+            return `${m}:${String(r).padStart(2, '0')}`;
+        }
+
+        function setPreviewMedia(elId, linkId, metaId, srcUrl) {
+            const el = document.getElementById(elId);
+            const link = document.getElementById(linkId);
+            const meta = document.getElementById(metaId);
+            if (!el || !meta) return;
+
+            if (!srcUrl) {
+                el.style.display = 'none';
+                el.removeAttribute('src');
+                try { el.load(); } catch {}
+                if (link) link.style.display = 'none';
+                meta.textContent = 'No cargado';
+                return;
+            }
+
+            const fullUrl = srcUrl.startsWith('http') ? srcUrl : `${API_URL}${srcUrl}`;
+            el.style.display = 'block';
+            el.src = fullUrl;
+            if (link) {
+                link.href = fullUrl;
+                link.style.display = 'inline';
+            }
+
+            meta.textContent = 'Cargando metadata...';
+            el.onloadedmetadata = () => {
+                const duration = Number.isFinite(el.duration) ? el.duration : null;
+                meta.textContent = duration ? `Duración: ${formatSeconds(duration)}` : 'Duración: —';
+            };
+            el.onerror = () => {
+                meta.textContent = 'No se pudo cargar el archivo';
+            };
+        }
+
+        function setButtonLoading(buttonEl, loading, labelText) {
+            if (!buttonEl) return;
+            if (loading) {
+                buttonEl.disabled = true;
+                buttonEl.dataset.originalText = buttonEl.textContent;
+                buttonEl.innerHTML = `<span class="loading-spinner"></span> ${labelText || 'Procesando...'}`;
+            } else {
+                buttonEl.disabled = false;
+                const t = buttonEl.dataset.originalText;
+                buttonEl.textContent = t || 'Subir';
+            }
+        }
+
+        function applyEditTherapyMediaTypeUI(mediaType) {
+            const audioSection = document.getElementById('editAudioUploadsSection');
+            const videoSection = document.getElementById('editVideoUploadSection');
+            const badge = document.getElementById('editMediaTypeBadge');
+            const hint = document.getElementById('editMediaTypeHint');
+
+            if (!audioSection || !videoSection || !badge) return;
+
+            const showAudio = mediaType === 'audio' || mediaType === 'both' || mediaType === 'unknown';
+            const showVideo = mediaType === 'video' || mediaType === 'both' || mediaType === 'unknown';
+
+            audioSection.style.display = showAudio ? 'block' : 'none';
+            videoSection.style.display = showVideo ? 'block' : 'none';
+
+            if (mediaType === 'audio') {
+                badge.textContent = 'Audio';
+                if (hint) hint.textContent = 'Detectado por archivos subidos.';
+            } else if (mediaType === 'video') {
+                badge.textContent = 'Video';
+                if (hint) hint.textContent = 'Detectado por archivos subidos.';
+            } else if (mediaType === 'both') {
+                badge.textContent = 'Audio + Video';
+                if (hint) hint.textContent = 'Detectado por archivos subidos.';
+            } else {
+                badge.textContent = 'Sin archivos';
+                if (hint) hint.textContent = 'No hay audio/video cargado aún.';
+            }
+        }
+
+        function showAllEditMediaSections() {
+            applyEditTherapyMediaTypeUI('both');
+            const hint = document.getElementById('editMediaTypeHint');
+            if (hint) hint.textContent = 'Mostrando todo (override).';
+        }
+
+        function refreshEditTherapyMediaTypeUIFromDOM() {
+            const audioIds = ['audioCortoStatus', 'audioMedianoStatus', 'audioLargoStatus'];
+            const hasAudio = audioIds.some((id) => {
+                const el = document.getElementById(id);
+                return el && el.textContent === '🔊';
+            });
+            const hasVideo = (() => {
+                const el = document.getElementById('videoStatus');
+                return el && el.textContent === '🎬';
+            })();
+
+            let mediaType = 'unknown';
+            if (hasAudio && hasVideo) mediaType = 'both';
+            else if (hasVideo) mediaType = 'video';
+            else if (hasAudio) mediaType = 'audio';
+
+            applyEditTherapyMediaTypeUI(mediaType);
+        }
+
+        async function openEditTherapyModal(therapyId) {
+            try {
+                await loadTherapyFormOptions(); // Cargar categorías y modos de luz
+                const therapy = await apiCall(`/api/therapies/${therapyId}`);
+                
+                document.getElementById('editTherapyId').value = therapy.id;
+                const idLabel = document.getElementById('editTherapyIdLabel');
+                if (idLabel) idLabel.textContent = therapy.id;
+                document.getElementById('editTherapyName').value = therapy.name;
+                document.getElementById('editTherapyDescription').value = therapy.description || '';
+                const rawCategory = therapy.category || '';
+                const mappedCategory = therapyCategorySlugToName[String(rawCategory)] || rawCategory;
+                document.getElementById('editTherapyCategory').value = mappedCategory;
+                document.getElementById('editTherapyColorMode').value = therapy.color_mode || 'default';
+
+                const accessSelect = document.getElementById('editTherapyAccessLevel');
+                if (accessSelect) accessSelect.value = String(therapy.access_level || 'basic');
+
+                // Estado
+                const isActive = therapy.is_active !== false;
+                const activeCheckbox = document.getElementById('editTherapyIsActive');
+                const activeLabel = document.getElementById('editTherapyIsActiveLabel');
+                const activePill = document.getElementById('editTherapyActivePill');
+                if (activeCheckbox) activeCheckbox.checked = isActive;
+                if (activeLabel) activeLabel.textContent = isActive ? 'Activa' : 'Inactiva';
+                if (activePill) activePill.textContent = `Estado: ${isActive ? 'Activa' : 'Inactiva'}`;
+                if (activeCheckbox) {
+                    activeCheckbox.onchange = () => {
+                        const on = activeCheckbox.checked;
+                        if (activeLabel) activeLabel.textContent = on ? 'Activa' : 'Inactiva';
+                        if (activePill) activePill.textContent = `Estado: ${on ? 'Activa' : 'Inactiva'}`;
+                    };
+                }
+
+                // Tipo de media guardado
+                const storedType = normalizeMediaType(therapy.media_type) || null;
+                const detectedType = detectTherapyMediaType(therapy);
+                const mediaSelect = document.getElementById('editTherapyMediaType');
+                const detectedPill = document.getElementById('editMediaDetectedPill');
+                const mismatchPill = document.getElementById('editMediaMismatchPill');
+                if (detectedPill) detectedPill.textContent = `Detectado: ${detectedType === 'unknown' ? '—' : detectedType}`;
+                const mismatch = storedType && detectedType !== 'unknown' && storedType !== detectedType;
+                if (mismatchPill) mismatchPill.style.display = mismatch ? 'inline-flex' : 'none';
+                if (mediaSelect) {
+                    mediaSelect.value = storedType || (detectedType === 'unknown' ? 'audio' : detectedType);
+                    mediaSelect.onchange = () => {
+                        applyEditTherapyMediaTypeUI(mediaSelect.value);
+                        const hint = document.getElementById('editMediaTypeHint');
+                        if (hint) hint.textContent = 'Tipo guardado actualizado (pendiente de Guardar cambios).';
+                        if (mismatchPill) mismatchPill.style.display = 'none';
+                    };
+                }
+                
+                // Intensidad
+                const intensity = therapy.default_intensity || 50;
+                document.getElementById('editTherapyIntensity').value = intensity;
+                document.getElementById('editIntensityValue').textContent = intensity;
+                
+                // Duraciones
+                document.getElementById('editDurationCorto').value = Math.floor((therapy.duration_corto_sec || 300) / 60);
+                document.getElementById('editDurationMediano').value = Math.floor((therapy.duration_mediano_sec || 1200) / 60);
+                document.getElementById('editDurationLargo').value = Math.floor((therapy.duration_largo_sec || 10800) / 60);
+                
+                // Etiquetas
+                document.getElementById('editDurationLabels').value = therapy.duration_labels || '';
+                
+                // Estados de audio
+                document.getElementById('audioCortoStatus').textContent = therapy.audio_corto_url ? '🔊' : '🔇';
+                document.getElementById('audioMedianoStatus').textContent = therapy.audio_mediano_url ? '🔊' : '🔇';
+                document.getElementById('audioLargoStatus').textContent = therapy.audio_largo_url ? '🔊' : '🔇';
+                document.getElementById('videoStatus').textContent = therapy.video_url ? '🎬' : '🔇';
+
+                // Vista previa
+                setPreviewMedia('previewAudioCorto', 'previewAudioCortoLink', 'previewAudioCortoMeta', therapy.audio_corto_url || null);
+                setPreviewMedia('previewAudioMediano', 'previewAudioMedianoLink', 'previewAudioMedianoMeta', therapy.audio_mediano_url || null);
+                setPreviewMedia('previewAudioLargo', 'previewAudioLargoLink', 'previewAudioLargoMeta', therapy.audio_largo_url || null);
+                setPreviewMedia('previewVideo', 'previewVideoLink', 'previewVideoMeta', therapy.video_url || null);
+
+                // Reset file inputs (evita subir por error un archivo seleccionado antes)
+                const audioInputs = ['editAudioCorto', 'editAudioMediano', 'editAudioLargo'];
+                audioInputs.forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                const videoInput = document.getElementById('editTherapyVideo');
+                if (videoInput) videoInput.value = '';
+
+                // UI: mostrar secciones según tipo detectado
+                const uiType = (() => {
+                    // Si hay mismatch entre guardado y archivos reales, mostrar todo para evitar ocultar archivos existentes.
+                    if (storedType && detectedType !== 'unknown' && storedType !== detectedType) return 'both';
+                    return storedType || (detectedType === 'unknown' ? 'audio' : detectedType);
+                })();
+                applyEditTherapyMediaTypeUI(uiType);
+                const hintEl = document.getElementById('editMediaTypeHint');
+                if (hintEl && storedType && detectedType !== 'unknown' && storedType !== detectedType) {
+                    hintEl.textContent = `Nota: tipo guardado (${storedType}) ≠ archivos (${detectedType}).`;
+                }
+                
+                openModal('editTherapy');
+            } catch (error) {
+                showToast('Error al cargar terapia', 'error');
+            }
+        }
+
+        // Subir audio por tipo de duración
+        async function uploadTherapyAudio(durationType) {
+            const therapyId = document.getElementById('editTherapyId').value;
+            const fileInput = document.getElementById(`editAudio${durationType.charAt(0).toUpperCase() + durationType.slice(1)}`);
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Selecciona un archivo primero', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const uploadBtn = document.querySelector(`button[onclick="uploadTherapyAudio('${durationType}')"]`);
+            const statusSpanId = `audio${durationType.charAt(0).toUpperCase() + durationType.slice(1)}Status`;
+            const statusSpan = document.getElementById(statusSpanId);
+            if (statusSpan) statusSpan.textContent = '⏳';
+            setButtonLoading(uploadBtn, true, 'Subiendo...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/therapies/${therapyId}/audio/${durationType}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Error al subir archivo');
+                }
+
+                const payload = await response.json();
+
+                showToast(`Audio ${durationType} subido exitosamente`, 'success');
+                document.getElementById(`audio${durationType.charAt(0).toUpperCase() + durationType.slice(1)}Status`).textContent = '🔊';
+                if (payload && payload.audio_url) {
+                    if (durationType === 'corto') setPreviewMedia('previewAudioCorto', 'previewAudioCortoLink', 'previewAudioCortoMeta', payload.audio_url);
+                    if (durationType === 'mediano') setPreviewMedia('previewAudioMediano', 'previewAudioMedianoLink', 'previewAudioMedianoMeta', payload.audio_url);
+                    if (durationType === 'largo') setPreviewMedia('previewAudioLargo', 'previewAudioLargoLink', 'previewAudioLargoMeta', payload.audio_url);
+                }
+                fileInput.value = '';
+                refreshEditTherapyMediaTypeUIFromDOM();
+                loadTherapies();
+            } catch (error) {
+                if (statusSpan) statusSpan.textContent = '🔇';
+                showToast(error.message, 'error');
+            } finally {
+                setButtonLoading(uploadBtn, false);
+            }
+        }
+
+        async function uploadTherapyMedia(type) {
+            const therapyId = document.getElementById('editTherapyId').value;
+            const fileInput = document.getElementById(type === 'audio' ? 'editTherapyAudio' : 'editTherapyVideo');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Selecciona un archivo primero', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const uploadBtn = document.querySelector(`button[onclick="uploadTherapyMedia('${type}')"]`);
+            const statusSpan = document.getElementById(type === 'video' ? 'videoStatus' : 'audioStatus');
+            if (statusSpan) statusSpan.textContent = '⏳';
+            setButtonLoading(uploadBtn, true, 'Subiendo...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/therapies/${therapyId}/${type}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Error al subir archivo');
+                }
+
+                const payload = await response.json();
+
+                showToast(`${type === 'audio' ? 'Audio' : 'Video'} subido exitosamente`, 'success');
+                const statusEl = document.getElementById(type === 'audio' ? 'audioStatus' : 'videoStatus');
+                if (statusEl) statusEl.textContent = type === 'audio' ? '🔊' : '🎬';
+                if (type === 'video' && payload && payload.video_url) {
+                    setPreviewMedia('previewVideo', 'previewVideoLink', 'previewVideoMeta', payload.video_url);
+                }
+                fileInput.value = '';
+                refreshEditTherapyMediaTypeUIFromDOM();
+                loadTherapies();
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                setButtonLoading(uploadBtn, false);
+            }
+        }
+
+        async function deleteTherapy(therapyId) {
+            if (!confirm('¿Eliminar esta terapia?')) return;
+            
+            try {
+                await apiCall(`/api/therapies/${therapyId}`, { method: 'DELETE' });
+                showToast('Terapia eliminada', 'success');
+                loadTherapies();
+                loadDashboardData();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Upload Media Modal (después de crear terapia)
+        // ─────────────────────────────────────────────────────
+        function openUploadMediaModal(therapyId, therapyName, mediaType, enabledDurations) {
+            document.getElementById('uploadMediaTherapyId').value = therapyId;
+            document.getElementById('uploadMediaType').value = mediaType;
+            document.getElementById('uploadMediaTherapyName').textContent = therapyName;
+            
+            // Mostrar/ocultar secciones según tipo de media
+            const audioSection = document.getElementById('uploadAudioSection');
+            const videoSection = document.getElementById('uploadVideoSection');
+            
+            if (mediaType === 'video') {
+                audioSection.style.display = 'none';
+                videoSection.style.display = 'block';
+            } else if (mediaType === 'audio') {
+                audioSection.style.display = 'block';
+                videoSection.style.display = 'none';
+            } else {
+                audioSection.style.display = 'block';
+                videoSection.style.display = 'block';
+            }
+            
+            // Mostrar/ocultar tipos de duración habilitados
+            document.getElementById('uploadCortoSection').style.display = enabledDurations.enableCorto ? 'block' : 'none';
+            document.getElementById('uploadMedianoSection').style.display = enabledDurations.enableMediano ? 'block' : 'none';
+            document.getElementById('uploadLargoSection').style.display = enabledDurations.enableLargo ? 'block' : 'none';
+            
+            // Reset estados
+            ['Corto', 'Mediano', 'Largo'].forEach(type => {
+                document.getElementById(`uploadAudio${type}Status`).textContent = '⏳';
+                document.getElementById(`uploadAudio${type}Duration`).textContent = '';
+                const input = document.getElementById(`uploadAudio${type}`);
+                if (input) input.value = '';
+            });
+            document.getElementById('uploadVideoStatus').textContent = '⏳';
+            document.getElementById('uploadVideoDuration').textContent = '';
+            document.getElementById('uploadVideo').value = '';
+            
+            document.getElementById('modal-uploadMedia').classList.add('show');
+        }
+        
+        function closeUploadModal() {
+            document.getElementById('modal-uploadMedia').classList.remove('show');
+            loadTherapies();
+        }
+        
+        // Preview duración del audio antes de subir
+        function previewAudioDuration(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const audio = new Audio();
+            audio.src = URL.createObjectURL(file);
+            audio.onloadedmetadata = () => {
+                const duration = Math.round(audio.duration);
+                const mins = Math.floor(duration / 60);
+                const secs = duration % 60;
+                document.getElementById(`uploadAudio${type.charAt(0).toUpperCase() + type.slice(1)}Duration`).textContent = 
+                    `${mins}:${secs.toString().padStart(2, '0')}`;
+                URL.revokeObjectURL(audio.src);
+            };
+        }
+        
+        // Preview duración del video
+        function previewVideoDuration(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(file);
+            video.onloadedmetadata = () => {
+                const duration = Math.round(video.duration);
+                const mins = Math.floor(duration / 60);
+                const secs = duration % 60;
+                document.getElementById('uploadVideoDuration').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                URL.revokeObjectURL(video.src);
+            };
+        }
+        
+        // Subir audio desde el nuevo modal
+        async function uploadNewTherapyAudio(durationType) {
+            const therapyId = document.getElementById('uploadMediaTherapyId').value;
+            const fileInput = document.getElementById(`uploadAudio${durationType.charAt(0).toUpperCase() + durationType.slice(1)}`);
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Selecciona un archivo primero', 'error');
+                return;
+            }
+
+            const statusEl = document.getElementById(`uploadAudio${durationType.charAt(0).toUpperCase() + durationType.slice(1)}Status`);
+            statusEl.textContent = '⏳';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_URL}/api/therapies/${therapyId}/audio/${durationType}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Error al subir archivo');
+                }
+
+                showToast(`Audio ${durationType} subido exitosamente`, 'success');
+                statusEl.textContent = '✅';
+                fileInput.value = '';
+            } catch (error) {
+                showToast(error.message, 'error');
+                statusEl.textContent = '❌';
+            }
+        }
+        
+        // Subir video desde el nuevo modal
+        async function uploadNewTherapyVideo() {
+            const therapyId = document.getElementById('uploadMediaTherapyId').value;
+            const fileInput = document.getElementById('uploadVideo');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showToast('Selecciona un archivo primero', 'error');
+                return;
+            }
+
+            const statusEl = document.getElementById('uploadVideoStatus');
+            statusEl.textContent = '⏳';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_URL}/api/therapies/${therapyId}/video`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Error al subir archivo');
+                }
+
+                showToast('Video subido exitosamente', 'success');
+                statusEl.textContent = '✅';
+                fileInput.value = '';
+            } catch (error) {
+                showToast(error.message, 'error');
+                statusEl.textContent = '❌';
+            }
+        }
+
+        // Cargar planes al abrir modal de crear usuario
+        async function loadPlansForUserModal() {
+            try {
+                const plans = await apiCall('/api/admin/plans');
+                const select = document.getElementById('createUserPlanSelect');
+                select.innerHTML = '<option value="">Sin plan</option>' + 
+                    plans.filter(p => p.is_active).map(p => 
+                        `<option value="${p.id}">${p.name} (${p.credits_included} créditos)</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Error loading plans:', error);
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Plans handlers
+        // ─────────────────────────────────────────────────────
+        document.getElementById('createPlanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                name: form.name.value,
+                description: form.description.value || null,
+                credits_included: parseInt(form.credits_included.value),
+                price: Math.round(parseFloat(form.price.value) * 100),
+                therapies_access: form.therapies_access.value
+            };
+
+            try {
+                await apiCall('/api/admin/plans', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showToast('Plan creado exitosamente', 'success');
+                closeModal('createPlan');
+                form.reset();
+                loadPlans();
+                loadDashboardData();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        document.getElementById('editPlanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const planId = form.planId.value;
+            const data = {
+                name: form.name.value,
+                description: form.description.value || null,
+                credits_included: parseInt(form.credits_included.value),
+                price: Math.round(parseFloat(form.price.value) * 100),
+                therapies_access: form.therapies_access.value,
+                is_active: form.is_active.checked
+            };
+
+            try {
+                await apiCall(`/api/admin/plans/${planId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                showToast('Plan actualizado', 'success');
+                closeModal('editPlan');
+                loadPlans();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function openEditPlanModal(planId) {
+            try {
+                const plan = await apiCall(`/api/admin/plans/${planId}`);
+                document.getElementById('editPlanId').value = plan.id;
+                document.getElementById('editPlanName').value = plan.name;
+                document.getElementById('editPlanDescription').value = plan.description || '';
+                document.getElementById('editPlanCredits').value = plan.credits_included;
+                document.getElementById('editPlanPrice').value = (plan.price / 100).toFixed(2);
+                document.getElementById('editPlanAccess').value = plan.therapies_access || 'all';
+                document.getElementById('editPlanActive').checked = plan.is_active;
+                openModal('editPlan');
+            } catch (error) {
+                showToast('Error al cargar plan', 'error');
+            }
+        }
+
+        async function deletePlan(planId, planName) {
+            if (!confirm(`¿Eliminar el plan "${planName}"? Los usuarios que lo tengan asignado no perderán sus créditos.`)) return;
+            
+            try {
+                await apiCall(`/api/admin/plans/${planId}`, { method: 'DELETE' });
+                showToast('Plan eliminado', 'success');
+                loadPlans();
+                loadDashboardData();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Assign Plan to User
+        // ─────────────────────────────────────────────────────
+        async function openAssignPlanModal(userId, userName) {
+            document.getElementById('assignPlanUserId').value = userId;
+            document.getElementById('assignPlanUserName').textContent = userName;
+            
+            try {
+                const plans = await apiCall('/api/admin/plans');
+                const select = document.getElementById('assignPlanSelect');
+                select.innerHTML = plans.filter(p => p.is_active).map(p => 
+                    `<option value="${p.id}">${p.name} (${p.credits_included} créditos - $${(p.price / 100).toFixed(2)})</option>`
+                ).join('');
+                openModal('assignPlan');
+            } catch (error) {
+                showToast('Error al cargar planes', 'error');
+            }
+        }
+
+        document.getElementById('assignPlanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const userId = form.userId.value;
+            const planId = form.plan_id.value;
+
+            try {
+                await apiCall(`/api/admin/users/${userId}/plan`, {
+                    method: 'POST',
+                    body: JSON.stringify({ plan_id: parseInt(planId) })
+                });
+                showToast('Plan asignado exitosamente', 'success');
+                closeModal('assignPlan');
+                loadUsers();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        // ─────────────────────────────────────────────────────
+        // Playlist handlers
+        // ─────────────────────────────────────────────────────
+        let currentEditingPlaylistId = null;
+        let cachedTherapies = [];
+
+        document.getElementById('createPlaylistForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = { name: form.name.value };
+
+            try {
+                const playlist = await apiCall('/api/playlists', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showToast('Playlist creada exitosamente', 'success');
+                closeModal('createPlaylist');
+                form.reset();
+                // Abrir directamente el editor para agregar terapias
+                openEditPlaylistModal(playlist.id);
+                loadPlaylists();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        document.getElementById('editPlaylistForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const playlistId = form.playlistId.value;
+            const data = { name: form.name.value };
+
+            try {
+                await apiCall(`/api/playlists/${playlistId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                showToast('Playlist actualizada', 'success');
+                loadPlaylists();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function openEditPlaylistModal(playlistId) {
+            currentEditingPlaylistId = playlistId;
+            try {
+                const playlist = await apiCall(`/api/playlists/${playlistId}`);
+                document.getElementById('editPlaylistId').value = playlist.id;
+                document.getElementById('editPlaylistName').value = playlist.name;
+                renderPlaylistItems(playlist.items);
+                openModal('editPlaylist');
+            } catch (error) {
+                showToast('Error al cargar playlist', 'error');
+            }
+        }
+
+        function renderPlaylistItems(items) {
+            const container = document.getElementById('playlistItemsList');
+            
+            if (items.length === 0) {
+                container.innerHTML = '<p style="color: #64748b; text-align: center; padding: 1rem;">Sin terapias. Haz clic en "Agregar terapia".</p>';
+                document.getElementById('playlistTotalDuration').textContent = '0 min';
+                return;
+            }
+
+            let totalDuration = 0;
+            container.innerHTML = items.map((item, idx) => {
+                const duration = item.duration_override || 10; // Default 10 min si no hay override
+                totalDuration += duration;
+                return `
+                    <div class="playlist-item" data-item-id="${item.id}" draggable="true">
+                        <div class="playlist-item-order">${idx + 1}</div>
+                        <div class="playlist-item-info">
+                            <div class="playlist-item-name">${item.therapy_name}</div>
+                            <div class="playlist-item-duration">${item.duration_override ? item.duration_override + ' min (personalizado)' : 'Duración original'}</div>
+                        </div>
+                        <div class="playlist-item-actions">
+                            <button type="button" class="playlist-item-btn delete" onclick="removePlaylistItem(${item.id})">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('playlistTotalDuration').textContent = totalDuration + ' min';
+            
+            // Enable drag and drop
+            setupDragAndDrop();
+        }
+
+        function setupDragAndDrop() {
+            const container = document.getElementById('playlistItemsList');
+            const items = container.querySelectorAll('.playlist-item');
+            
+            items.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    item.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', item.dataset.itemId);
+                });
+                
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    savePlaylistOrder();
+                });
+                
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const dragging = container.querySelector('.dragging');
+                    if (dragging && dragging !== item) {
+                        const rect = item.getBoundingClientRect();
+                        const midY = rect.top + rect.height / 2;
+                        if (e.clientY < midY) {
+                            container.insertBefore(dragging, item);
+                        } else {
+                            container.insertBefore(dragging, item.nextSibling);
+                        }
+                    }
+                });
+            });
+        }
+
+        async function savePlaylistOrder() {
+            const container = document.getElementById('playlistItemsList');
+            const itemIds = Array.from(container.querySelectorAll('.playlist-item'))
+                .map(el => parseInt(el.dataset.itemId));
+            
+            try {
+                await apiCall(`/api/playlists/${currentEditingPlaylistId}/reorder`, {
+                    method: 'POST',
+                    body: JSON.stringify({ item_ids: itemIds })
+                });
+                // Actualizar números de orden visualmente
+                container.querySelectorAll('.playlist-item-order').forEach((el, idx) => {
+                    el.textContent = idx + 1;
+                });
+            } catch (error) {
+                console.error('Error reordering:', error);
+            }
+        }
+
+        async function openAddTherapyModal() {
+            // Cargar terapias si no están cacheadas
+            if (cachedTherapies.length === 0) {
+                try {
+                    cachedTherapies = await apiCall('/api/therapies');
+                } catch (error) {
+                    showToast('Error al cargar terapias', 'error');
+                    return;
+                }
+            }
+            
+            const select = document.getElementById('addTherapySelect');
+            select.innerHTML = '<option value="">Selecciona una terapia...</option>' +
+                cachedTherapies.map(t => 
+                    `<option value="${t.id}">${t.name} (${Math.floor(t.default_duration_sec / 60)} min)</option>`
+                ).join('');
+            
+            openModal('addTherapyToPlaylist');
+        }
+
+        document.getElementById('addTherapyToPlaylistForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                therapy_id: parseInt(form.therapy_id.value),
+                duration_override: form.duration_override.value ? parseInt(form.duration_override.value) * 60 : null
+            };
+
+            try {
+                await apiCall(`/api/playlists/${currentEditingPlaylistId}/items`, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                showToast('Terapia agregada', 'success');
+                closeModal('addTherapyToPlaylist');
+                form.reset();
+                // Recargar items
+                const playlist = await apiCall(`/api/playlists/${currentEditingPlaylistId}`);
+                renderPlaylistItems(playlist.items);
+                loadPlaylists();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function removePlaylistItem(itemId) {
+            if (!confirm('¿Eliminar esta terapia de la playlist?')) return;
+            
+            try {
+                await apiCall(`/api/playlists/${currentEditingPlaylistId}/items/${itemId}`, {
+                    method: 'DELETE'
+                });
+                showToast('Terapia eliminada de la playlist', 'success');
+                // Recargar items
+                const playlist = await apiCall(`/api/playlists/${currentEditingPlaylistId}`);
+                renderPlaylistItems(playlist.items);
+                loadPlaylists();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function deletePlaylist(playlistId, playlistName) {
+            if (!confirm(`¿Eliminar la playlist "${playlistName}"?`)) return;
+            
+            try {
+                await apiCall(`/api/playlists/${playlistId}`, { method: 'DELETE' });
+                showToast('Playlist eliminada', 'success');
+                loadPlaylists();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Toast
+        // ─────────────────────────────────────────────────────
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    ${type === 'success' 
+                        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />'
+                        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />'
+                    }
+                </svg>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Arduino (placeholder)
+        // ─────────────────────────────────────────────────────
+        function connectArduino() {
+            showToast('La conexión Arduino se realiza desde la app principal', 'error');
+        }
+
+        // ─────────────────────────────────────────────────────
+        // Analytics
+        // ─────────────────────────────────────────────────────
+        let chartInstances = {};
+
+        async function loadAnalytics() {
+            const period = document.getElementById('analyticsPeriod').value;
+            
+            try {
+                // Cargar KPIs del dashboard
+                const stats = await apiCall('/api/analytics/dashboard');
+                document.getElementById('kpiSessionsMonth').textContent = stats.sessions_month;
+                document.getElementById('kpiActiveUsers').textContent = stats.active_users_week;
+                document.getElementById('kpiCreditsConsumed').textContent = stats.credits_consumed_month;
+                document.getElementById('kpiCompletionRate').textContent = stats.completion_rate + '%';
+
+                // Cargar gráficas en paralelo
+                await Promise.all([
+                    loadSessionsTimeline(period),
+                    loadCreditsFlow(period),
+                    loadCategoryDistribution(period),
+                    loadHoursDistribution(period),
+                    loadTopTherapies(period),
+                    loadTopUsers(period),
+                    loadRecentSessions(),
+                ]);
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                showToast('Error al cargar analytics', 'error');
+            }
+        }
+
+        async function loadSessionsTimeline(period) {
+            try {
+                const data = await apiCall(`/api/analytics/sessions/timeline?period=${period}`);
+                
+                if (chartInstances.sessionsTimeline) {
+                    chartInstances.sessionsTimeline.destroy();
+                }
+
+                const ctx = document.getElementById('chartSessionsTimeline').getContext('2d');
+                chartInstances.sessionsTimeline = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(d => d.date),
+                        datasets: [{
+                            label: 'Sesiones',
+                            data: data.map(d => d.value),
+                            borderColor: '#a855f7',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                            y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                        }
+                    }
+                });
+            } catch (e) { console.error('Sessions timeline error:', e); }
+        }
+
+        async function loadCreditsFlow(period) {
+            try {
+                const data = await apiCall(`/api/analytics/credits/flow?period=${period}`);
+                
+                if (chartInstances.creditsFlow) {
+                    chartInstances.creditsFlow.destroy();
+                }
+
+                const ctx = document.getElementById('chartCreditsFlow').getContext('2d');
+                chartInstances.creditsFlow = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d.date),
+                        datasets: [
+                            {
+                                label: 'Agregados',
+                                data: data.map(d => d.credits_added),
+                                backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                            },
+                            {
+                                label: 'Consumidos',
+                                data: data.map(d => d.credits_consumed),
+                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: '#94a3b8' } } },
+                        scales: {
+                            x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                            y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                        }
+                    }
+                });
+            } catch (e) { console.error('Credits flow error:', e); }
+        }
+
+        async function loadCategoryDistribution(period) {
+            try {
+                const data = await apiCall(`/api/analytics/categories/distribution?period=${period}`);
+                
+                if (chartInstances.categoryDistribution) {
+                    chartInstances.categoryDistribution.destroy();
+                }
+
+                const colors = ['#a855f7', '#ec4899', '#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6'];
+                const ctx = document.getElementById('chartCategoryDistribution').getContext('2d');
+                chartInstances.categoryDistribution = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.map(d => d.category),
+                        datasets: [{
+                            data: data.map(d => d.count),
+                            backgroundColor: colors.slice(0, data.length),
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#94a3b8', padding: 10 }
+                            }
+                        }
+                    }
+                });
+            } catch (e) { console.error('Category distribution error:', e); }
+        }
+
+        async function loadHoursDistribution(period) {
+            try {
+                const data = await apiCall(`/api/analytics/hours/distribution?period=${period}`);
+                
+                if (chartInstances.hoursDistribution) {
+                    chartInstances.hoursDistribution.destroy();
+                }
+
+                const ctx = document.getElementById('chartHoursDistribution').getContext('2d');
+                chartInstances.hoursDistribution = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => `${d.hour}:00`),
+                        datasets: [{
+                            label: 'Sesiones',
+                            data: data.map(d => d.count),
+                            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                            y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' }, beginAtZero: true }
+                        }
+                    }
+                });
+            } catch (e) { console.error('Hours distribution error:', e); }
+        }
+
+        async function loadTopTherapies(period) {
+            try {
+                const data = await apiCall(`/api/analytics/therapies/usage?period=${period}&limit=5`);
+                const tbody = document.getElementById('topTherapiesTable');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #64748b;">Sin datos</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(t => `
+                    <tr>
+                        <td>${t.therapy_name}</td>
+                        <td>${t.total_sessions}</td>
+                        <td><span class="badge active">${t.completion_rate}%</span></td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error('Top therapies error:', e); }
+        }
+
+        async function loadTopUsers(period) {
+            try {
+                const data = await apiCall(`/api/analytics/users/activity?period=${period}&limit=5`);
+                const tbody = document.getElementById('topUsersTable');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #64748b;">Sin datos</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(u => `
+                    <tr>
+                        <td>${u.user_name || u.user_email}</td>
+                        <td>${u.total_sessions}</td>
+                        <td>${u.credits_consumed}</td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error('Top users error:', e); }
+        }
+
+        async function loadRecentSessions() {
+            try {
+                const data = await apiCall('/api/analytics/sessions/recent?limit=10');
+                const tbody = document.getElementById('recentSessionsTable');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b;">Sin sesiones</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(s => `
+                    <tr>
+                        <td>${s.user_name || s.user_email}</td>
+                        <td>${s.therapy_name}</td>
+                        <td>${new Date(s.started_at).toLocaleString('es-MX')}</td>
+                        <td>${s.duration_min} min</td>
+                        <td><span class="badge ${s.status === 'completed' ? 'active' : s.status === 'cancelled' ? 'inactive' : 'admin'}">${s.status}</span></td>
+                        <td>${s.credits_consumed}</td>
+                    </tr>
+                `).join('');
+            } catch (e) { console.error('Recent sessions error:', e); }
+        }
+
+        async function exportData() {
+            const period = document.getElementById('analyticsPeriod').value;
+            const now = new Date();
+            let startDate;
+            
+            switch (period) {
+                case 'week': startDate = new Date(now - 7 * 24 * 60 * 60 * 1000); break;
+                case 'month': startDate = new Date(now - 30 * 24 * 60 * 60 * 1000); break;
+                case 'quarter': startDate = new Date(now - 90 * 24 * 60 * 60 * 1000); break;
+                case 'year': startDate = new Date(now - 365 * 24 * 60 * 60 * 1000); break;
+                default: startDate = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            const url = `${API_URL}/api/analytics/export/report?start_date=${startDate.toISOString()}&end_date=${now.toISOString()}`;
+            
+            try {
+                token = localStorage.getItem('token') || localStorage.getItem('kryon_token');
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Error al exportar');
+                
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `analytics_report_${period}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                showToast('Datos exportados correctamente', 'success');
+            } catch (error) {
+                showToast('Error al exportar datos', 'error');
+            }
+        }
+
+        // Init
+        checkAuth();
+    </script>
+</body>
+</html>

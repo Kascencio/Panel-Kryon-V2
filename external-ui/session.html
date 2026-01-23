@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión de Terapia | Cabina AQ</title>
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .session-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        /* ═══════════════════════════════════════════════════════
+           TOP BAR
+           ═══════════════════════════════════════════════════════ */
+        .session-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            flex-shrink: 0;
+            gap: 1rem;
+        }
+        
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .btn-back:hover {
+            background: rgba(75, 85, 99, 0.9);
+        }
+        
+        .header-center {
+            text-align: center;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .header-center h1 {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .header-center .subtitle {
+            font-size: clamp(0.7rem, 2vw, 0.85rem);
+            color: #9ca3af;
+            margin-top: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .header-badges {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge.mode {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+        }
+        
+        .badge.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
+        
+        .badge.inactive {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+            border: 1px solid rgba(107, 114, 128, 0.4);
+        }
+        
+        .badge.video {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+        
+        /* ═══════════════════════════════════════════════════════
+           MAIN LAYOUT - 2 COLUMNAS
+           ═══════════════════════════════════════════════════════ */
+        .session-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr clamp(300px, 30%, 400px);
+            gap: clamp(1rem, 2vw, 1.5rem);
+            padding: clamp(0.75rem, 2vw, 1.5rem);
+            overflow: hidden;
+        }
+        
+        /* Tablet landscape */
+        @media (max-width: 1200px) {
+            .session-body {
+                grid-template-columns: 1fr 320px;
+            }
+        }
+        
+        /* Tablet portrait y móvil */
+        @media (max-width: 900px) {
+            .session-body {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .main-panel {
+                min-height: 50vh;
+            }
+        }
+        
+        /* Móvil pequeño */
+        @media (max-width: 480px) {
+            .session-body {
+                padding: 0.75rem;
+                gap: 0.75rem;
+            }
+            
+            .session-topbar {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .btn-back span:not(:first-child) {
+                display: none;
+            }
+            
+            .header-badges .badge.mode {
+                display: none;
+            }
+        }
+        
+        /* ═══════════════════════════════════════════════════════
+           PANEL PRINCIPAL (izquierda)
+           ═══════════════════════════════════════════════════════ */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 0;
+        }
+        
+        /* Visual Area (video o efectos) */
+        .visual-area {
+            flex: 1;
+            position: relative;
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: clamp(12px, 2vw, 16px);
+            overflow: hidden;
+            min-height: clamp(250px, 40vh, 400px);
+        }
+        
+        .visual-area video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .visual-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-align: center;
+            padding: clamp(1rem, 3vw, 2rem);
+        }
+        
+        .therapy-icon {
+            width: clamp(60px, 10vw, 80px);
+            height: clamp(60px, 10vw, 80px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            margin-bottom: clamp(0.5rem, 2vw, 1rem);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .therapy-title {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .therapy-description {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: #d1d5db;
+            margin-bottom: clamp(0.75rem, 2vw, 1.5rem);
+            max-width: 400px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .timer-large {
+            font-size: clamp(2.5rem, 10vw, 5rem);
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+            line-height: 1;
+        }
+        
+        .timer-total {
+            font-size: clamp(0.9rem, 2vw, 1.25rem);
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 900px) {
+            .visual-area {
+                min-height: 280px;
+            }
+            
+            .therapy-description {
+                display: none;
+            }
+        }
+        
+        /* Video External Indicator */
+        .video-external-indicator {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(99, 102, 241, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #fff;
+            z-index: 10;
+        }
+        
+        /* Video Preview Mode (for video-only therapies) - Monitor View */
+        .video-preview-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-preview-container video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+        
+        .video-preview-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .video-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .video-preview-badge {
+            background: rgba(239, 68, 68, 0.9);
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            animation: pulse-live 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .video-preview-title {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .video-preview-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .video-preview-timer {
+            font-size: clamp(3rem, 12vw, 6rem);
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(99, 102, 241, 0.8);
+            letter-spacing: 0.1em;
+            line-height: 1;
+        }
+        
+        .video-preview-timer-label {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+        
+        .video-preview-footer {
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .video-preview-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .video-preview-progress .time-label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            font-family: 'Courier New', monospace;
+            min-width: 45px;
+        }
+        
+        .video-preview-progress .progress-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .video-preview-progress .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Progress Card */
+        .progress-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: clamp(8px, 1.5vw, 12px);
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2vw, 1.5rem);
+            flex-shrink: 0;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: clamp(0.5rem, 1vw, 0.75rem);
+        }
+        
+        .progress-header span {
+            font-weight: 500;
+            color: #fff;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+        }
+        
+        .progress-header .percent {
+            font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+            color: #9ca3af;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: rgba(55, 65, 81, 0.8);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        
+        /* ═══════════════════════════════════════════════════════
+           PANEL DE CONTROL (derecha)
+           ═══════════════════════════════════════════════════════ */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.75rem, 1.5vw, 1rem);
+            overflow-y: auto;
+            padding-right: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+        }
+        
+        .control-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .control-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .control-panel::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 3px;
+        }
+        
+        .control-card {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            border-radius: clamp(8px, 1.5vw, 12px);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .control-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: clamp(0.75rem, 1.5vw, 1rem);
+            border-bottom: 1px solid rgba(75, 85, 99, 0.5);
+            color: #fff;
+            font-weight: 600;
+            font-size: clamp(0.85rem, 1.5vw, 1rem);
+        }
+        
+        .control-card-header .icon {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+        }
+        
+        .control-card-body {
+            padding: clamp(0.75rem, 1.5vw, 1rem);
+        }
+        
+        /* En móvil, cards en grid de 2 columnas */
+        @media (max-width: 900px) {
+            .control-panel {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            /* Session control ocupa todo el ancho */
+            .control-card:first-child {
+                grid-column: 1 / -1;
+            }
+            
+            /* Playlist ocupa todo el ancho */
+            #playlistCard {
+                grid-column: 1 / -1;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Session Control Buttons */
+        .btn-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: clamp(0.75rem, 2vw, 1rem);
+            border: none;
+            border-radius: clamp(8px, 1.5vw, 10px);
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-main:focus {
+            outline: 3px solid rgba(99, 102, 241, 0.5);
+            outline-offset: 2px;
+        }
+        
+        .btn-main.play {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        
+        .btn-main.play:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-main.pause {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+        }
+        
+        .btn-main.pause:hover {
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+        
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        
+        .btn-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:focus {
+            outline: 2px solid rgba(99, 102, 241, 0.5);
+            outline-offset: 2px;
+        }
+        
+        .btn-secondary.restart {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+            color: #fff;
+        }
+        
+        .btn-secondary.restart:hover {
+            background: rgba(75, 85, 99, 0.9);
+        }
+        
+        .btn-secondary.stop {
+            background: rgba(127, 29, 29, 0.5);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #f87171;
+        }
+        
+        .btn-secondary.stop:hover {
+            background: rgba(153, 27, 27, 0.6);
+        }
+        
+        /* Slider Control */
+        .slider-control {
+            margin-top: 1rem;
+        }
+        
+        .slider-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: #d1d5db;
+        }
+        
+        .slider-label .value {
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+        
+        .slider-input {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(55, 65, 81, 0.8);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+        
+        .slider-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .slider-input:focus {
+            outline: 2px solid rgba(99, 102, 241, 0.5);
+            outline-offset: 2px;
+        }
+        
+        /* Volume Control */
+        .volume-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .volume-icon {
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+        
+        .volume-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .volume-slider {
+            flex: 1;
+        }
+        
+        /* Level Meter */
+        .level-meter {
+            height: 8px;
+            background: rgba(55, 65, 81, 0.8);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+        
+        .level-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+            transition: width 0.1s;
+        }
+        
+        /* Device Buttons */
+        .device-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(107, 114, 128, 0.4);
+            border-radius: 8px;
+            color: #d1d5db;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .device-btn:hover {
+            background: rgba(75, 85, 99, 0.7);
+            color: #fff;
+        }
+        
+        .device-btn:focus {
+            outline: 2px solid rgba(99, 102, 241, 0.5);
+            outline-offset: 2px;
+        }
+        
+        .device-btn.connected {
+            background: rgba(21, 128, 61, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+            color: #4ade80;
+        }
+        
+        .device-btn .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
+        
+        .device-btn.connected .indicator {
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+        }
+        
+        .device-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        
+        /* Select Input */
+        .select-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .select-input:focus {
+            outline: 2px solid rgba(99, 102, 241, 0.5);
+            outline-offset: 2px;
+        }
+        
+        /* Mic Button */
+        .btn-mic {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.75rem;
+        }
+        
+        .btn-mic.off {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+            color: #d1d5db;
+        }
+        
+        .btn-mic.on {
+            background: rgba(21, 128, 61, 0.3);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #4ade80;
+        }
+        
+        .btn-mic:hover {
+            filter: brightness(1.1);
+        }
+        
+        /* Playlist Card */
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        
+        .playlist-item.current {
+            background: rgba(99, 102, 241, 0.2);
+            color: #e2e8f0;
+        }
+        
+        .playlist-item.completed {
+            color: #22c55e;
+        }
+        
+        /* Completion Modal */
+        .completion-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        
+        .completion-content {
+            text-align: center;
+            padding: clamp(1.5rem, 5vw, 3rem);
+            max-width: 90vw;
+        }
+        
+        .completion-icon {
+            font-size: clamp(3rem, 10vw, 5rem);
+            margin-bottom: clamp(0.5rem, 2vw, 1rem);
+        }
+        
+        .completion-title {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .completion-subtitle {
+            color: #94a3b8;
+            margin-bottom: clamp(1rem, 3vw, 2rem);
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: clamp(0.6rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:focus {
+            outline: 3px solid rgba(99, 102, 241, 0.5);
+            outline-offset: 2px;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Audio hidden */
+        audio { display: none; }
+        
+        /* Keyboard shortcuts info */
+        .shortcuts-info {
+            position: absolute;
+            bottom: clamp(0.5rem, 1.5vw, 1rem);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: clamp(0.75rem, 2vw, 1.5rem);
+            opacity: 0.5;
+            font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+            color: #9ca3af;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90%;
+        }
+        
+        .shortcuts-info:hover {
+            opacity: 0.9;
+        }
+        
+        .shortcut {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+        
+        .shortcut kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: clamp(20px, 3vw, 24px);
+            height: clamp(16px, 2.5vw, 20px);
+            padding: 0 4px;
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+            border-radius: 4px;
+            font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+            color: #e2e8f0;
+        }
+        
+        /* Ocultar shortcuts en móvil */
+        @media (max-width: 600px) {
+            .shortcuts-info {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="session-container">
+        <!-- ═══════════ TOP BAR ═══════════ -->
+        <div class="session-topbar">
+            <button class="btn-back" onclick="goToSelection()" title="Volver a selección">
+                ← Volver
+            </button>
+            
+            <div class="header-center">
+                <h1>Sesión Activa</h1>
+                <div class="subtitle" id="headerSubtitle">Cargando terapia...</div>
+            </div>
+            
+            <div class="header-badges">
+                <span class="badge mode" id="badgeMode">--</span>
+                <span class="badge inactive" id="badgeStatus">INACTIVA</span>
+                <span class="badge video hidden" id="badgeVideo">VIDEO</span>
+            </div>
+        </div>
+
+        <!-- ═══════════ BODY - 2 COLUMNAS ═══════════ -->
+        <div class="session-body">
+            <!-- Panel Principal (izquierda) -->
+            <div class="main-panel">
+                <!-- Área Visual -->
+                <div class="visual-area" id="visualArea">
+                    <video id="videoPlayer" loop muted class="hidden"></video>
+                    
+                    <!-- Video Preview Container (for video-only mode) - Monitor View -->
+                    <div class="video-preview-container hidden" id="videoPreviewContainer">
+                        <video id="videoPreview" loop muted playsinline></video>
+                        <div class="video-preview-overlay">
+                            <div class="video-preview-header">
+                                <div class="video-preview-badge">
+                                    <span>●</span> PANTALLA EXTERNA
+                                </div>
+                                <div class="video-preview-title" id="videoPreviewTitle">Terapia</div>
+                            </div>
+                            <div class="video-preview-content">
+                                <div class="video-preview-timer" id="videoPreviewTimer">00:00</div>
+                                <div class="video-preview-timer-label">Tiempo restante</div>
+                            </div>
+                            <div class="video-preview-footer">
+                                <div class="video-preview-progress">
+                                    <span class="time-label" id="videoPreviewElapsed">0:00</span>
+                                    <div class="progress-track">
+                                        <div class="progress-bar" id="videoPreviewProgress" style="width: 0%"></div>
+                                    </div>
+                                    <span class="time-label" id="videoPreviewTotal">0:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video External Indicator -->
+                    <div class="video-external-indicator hidden" id="videoExternalIndicator">
+                        🖥️ Video en pantalla externa
+                    </div>
+                    
+                    <!-- Overlay con info -->
+                    <div class="visual-overlay" id="visualOverlay">
+                        <div class="therapy-icon" id="therapyIcon" style="background: #6366f1;">🌀</div>
+                        <div class="therapy-title" id="therapyTitle">Terapia</div>
+                        <div class="therapy-description" id="therapyDescription">Descripción de la terapia</div>
+                        <div class="timer-large" id="timerDisplay" role="timer" aria-live="polite">00:00</div>
+                        <div class="timer-total">de <span id="totalTimeDisplay">00:00</span></div>
+                    </div>
+                    
+                    <!-- Keyboard shortcuts -->
+                    <div class="shortcuts-info" aria-hidden="true">
+                        <div class="shortcut"><kbd>Espacio</kbd> Play/Pausa</div>
+                        <div class="shortcut"><kbd>R</kbd> Reiniciar</div>
+                        <div class="shortcut"><kbd>Esc</kbd> Detener</div>
+                    </div>
+                </div>
+                
+                <!-- Progress Card -->
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <span>Progreso</span>
+                        <span class="percent" id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span id="elapsedLabel">0:00</span>
+                        <span id="totalLabel">0:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Control (derecha) -->
+            <div class="control-panel">
+                <!-- Control de Sesión -->
+                <div class="control-card">
+                    <div class="control-card-header">
+                        <span class="icon">⏱️</span>
+                        Control de Sesión
+                    </div>
+                    <div class="control-card-body">
+                        <!-- Botón principal (cambia según estado) -->
+                        <button class="btn-main play" id="btnPlayPause" onclick="togglePlayPause()" 
+                                title="Reproducir/Pausar (Espacio)" aria-label="Reproducir o pausar">
+                            <span id="playIcon">▶️</span>
+                            <span id="playLabel">Iniciar</span>
+                        </button>
+                        
+                        <!-- Botones secundarios (visible cuando activo) -->
+                        <div class="btn-grid hidden" id="secondaryButtons">
+                            <button class="btn-secondary restart" onclick="restartSession()" title="Reiniciar (R)">
+                                🔄 Reiniciar
+                            </button>
+                            <button class="btn-secondary stop" onclick="stopSession()" title="Detener (Esc)">
+                                ⏹️ Detener
+                            </button>
+                        </div>
+                        
+                        <!-- Control de Intensidad -->
+                        <div class="slider-control">
+                            <div class="slider-label">
+                                <span>💡 Intensidad de luz</span>
+                                <span class="value" id="intensityValue">50%</span>
+                            </div>
+                            <input type="range" class="slider-input" id="intensitySlider" 
+                                   min="0" max="100" value="50"
+                                   aria-label="Intensidad de luz">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Control de Volumen -->
+                <div class="control-card">
+                    <div class="control-card-header">
+                        <span class="icon">🔊</span>
+                        Audio
+                    </div>
+                    <div class="control-card-body">
+                        <div class="volume-row">
+                            <span class="volume-icon" id="volumeIcon" onclick="toggleMute()" title="Silenciar/Activar">🔊</span>
+                            <input type="range" class="slider-input volume-slider" id="volumeSlider" 
+                                   min="0" max="100" value="80"
+                                   aria-label="Volumen">
+                            <span id="volumeValue" style="min-width: 40px; text-align: right; color: #a5b4fc; font-size: 0.85rem;">80%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Micrófono -->
+                <div class="control-card">
+                    <div class="control-card-header">
+                        <span class="icon">🎤</span>
+                        Micrófono
+                    </div>
+                    <div class="control-card-body">
+                        <select class="select-input" id="micSelect" aria-label="Seleccionar micrófono">
+                            <option value="">Seleccionar micrófono...</option>
+                        </select>
+                        
+                        <div class="slider-control" style="margin-top: 0.75rem;">
+                            <div class="slider-label">
+                                <span>Volumen mic</span>
+                                <span class="value" id="micVolumeValue">100%</span>
+                            </div>
+                            <input type="range" class="slider-input" id="micVolumeSlider" 
+                                   min="0" max="100" value="100"
+                                   aria-label="Volumen del micrófono">
+                        </div>
+                        
+                        <div class="level-meter">
+                            <div class="level-fill" id="micLevelFill" style="width: 0%"></div>
+                        </div>
+                        
+                        <button class="btn-mic off" id="btnMic" onclick="toggleMic()">
+                            <span id="micIcon">🎤</span>
+                            <span id="micLabel">Encender Micrófono</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Dispositivos -->
+                <div class="control-card">
+                    <div class="control-card-header">
+                        <span class="icon">🔌</span>
+                        Dispositivos
+                    </div>
+                    <div class="control-card-body">
+                        <div class="device-grid">
+                            <button class="device-btn" id="btnArduino" onclick="toggleArduinoPanel()" title="Conectar Arduino">
+                                <span class="indicator"></span>
+                                Arduino
+                            </button>
+                            <button class="device-btn" id="btnExternalScreen" onclick="toggleExternalScreen()" title="Abrir pantalla externa">
+                                <span class="indicator"></span>
+                                Pantalla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Playlist (condicional) -->
+                <div class="control-card hidden" id="playlistCard">
+                    <div class="control-card-header">
+                        <span class="icon">📋</span>
+                        Playlist
+                    </div>
+                    <div class="control-card-body" id="playlistItems">
+                        <!-- Items dinámicos -->
+                    </div>
+                    <div style="padding: 0 1rem 1rem; display: flex; gap: 0.5rem;">
+                        <button class="btn-secondary restart" id="btnPrev" onclick="prevTherapy()" disabled style="flex:1">
+                            ⏮️ Anterior
+                        </button>
+                        <button class="btn-secondary restart" id="btnNext" onclick="nextTherapy()" disabled style="flex:1">
+                            Siguiente ⏭️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion Modal -->
+    <div class="completion-modal hidden" id="completionModal">
+        <div class="completion-content">
+            <div class="completion-icon">✨</div>
+            <div class="completion-title" id="completionTitle">¡Sesión Completada!</div>
+            <div class="completion-subtitle" id="completionMessage">Tu terapia ha finalizado exitosamente.</div>
+            <button class="btn-primary" onclick="goToSelection()">Volver a Selección</button>
+        </div>
+    </div>
+
+    <!-- Audio Player (hidden) -->
+    <audio id="audioPlayer"></audio>
+
+    <script src="./js/api.js"></script>
+    <script src="./js/arduino-serial.js"></script>
+    <script src="./js/broadcast-channel.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════
+        let currentSession = null;
+        let currentTherapy = null;
+        let playlist = null;
+        let playlistIndex = 0;
+        
+        let isActive = false;  // Sesión iniciada
+        let isPaused = false;  // Sesión pausada
+        let elapsedSeconds = 0;
+        let totalSeconds = 0;
+        let maxAllowedSeconds = 300;
+        let timerInterval = null;
+        
+        // Arduino & External Screen
+        let arduinoConnected = false;
+        let externalWindow = null;
+        let syncInterval = null;
+        let screenDetails = null;  // Multi-screen detection
+        
+        // Mic
+        let micOn = false;
+        let micStream = null;
+        let micAnalyser = null;
+        let previousVolume = 80;
+        
+        // ═══════════════════════════════════════════════════════
+        // ELEMENTS
+        // ═══════════════════════════════════════════════════════
+        const audioPlayer = document.getElementById('audioPlayer');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressFill = document.getElementById('progressFill');
+        const elapsedLabel = document.getElementById('elapsedLabel');
+        const totalLabel = document.getElementById('totalLabel');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const intensitySlider = document.getElementById('intensitySlider');
+        
+        // ═══════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════
+        async function init() {
+            if (!KryonAPI.requireAuth()) return;
+            
+            // Initialize BroadcastChannel
+            SessionChannel.init('controller');
+            setupChannelListeners();
+            
+            // Setup Arduino
+            setupArduinoListeners();
+            
+            // Detect secondary screen and auto-open external window
+            await detectAndOpenSecondaryScreen();
+            
+            // Get therapy or playlist
+            const therapyData = sessionStorage.getItem('selectedTherapy');
+            const playlistData = sessionStorage.getItem('selectedPlaylist');
+            
+            if (playlistData) {
+                playlist = JSON.parse(playlistData);
+                if (playlist.items && playlist.items.length > 0) {
+                    showPlaylistCard();
+                    await loadTherapyFromPlaylist(0);
+                } else {
+                    alert('Playlist vacía');
+                    goToSelection();
+                    return;
+                }
+            } else if (therapyData) {
+                currentTherapy = JSON.parse(therapyData);
+                await prepareSession(currentTherapy);
+            } else {
+                alert('No se seleccionó ninguna terapia');
+                goToSelection();
+                return;
+            }
+            
+            setupEventListeners();
+            requestMicPermission();
+            
+            // Auto-iniciar la sesión después de cargar
+            setTimeout(() => {
+                startSession();
+            }, 500);
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // SESSION MANAGEMENT
+        // ═══════════════════════════════════════════════════════
+        async function prepareSession(therapy) {
+            currentTherapy = therapy;
+            
+            // Get customization
+            const customization = therapy._customization || {
+                durationType: 'corto',
+                lightMode: therapy.color_mode || 'general',
+                intensity: therapy.default_intensity || 50,
+                maxDuration: therapy.default_duration_sec || 300,
+                audioUrl: therapy.audio_corto_url,
+            };
+            
+            currentTherapy._activeCustomization = customization;
+
+            // Set duration
+            totalSeconds = customization.maxDuration;
+            // For video-only sessions, do not apply audio duration caps.
+            maxAllowedSeconds = (customization.videoOnly === true)
+                ? totalSeconds
+                : KryonAPI.getDurationLimits(customization.durationType).max;
+            updateTimerDisplay();
+
+            // Update UI (after duration is known)
+            updateTherapyUI(therapy, customization);
+            
+            // Load media
+            await loadMedia(therapy, customization);
+            
+            // Set intensity
+            intensitySlider.value = customization.intensity;
+            document.getElementById('intensityValue').textContent = customization.intensity + '%';
+
+            // If we're in a playlist, proactively sync the upcoming therapy to the external screen
+            // (important for clean audio↔video control transitions before pressing Start).
+            if (playlist && SessionChannel?.Controller?.changeTherapy) {
+                SessionChannel.Controller.changeTherapy(currentTherapy, playlistIndex, {
+                    duration: totalSeconds,
+                    colorMode: customization.lightMode,
+                    playlist,
+                    playlistIndex,
+                    playVideo: customization.playVideo !== false,
+                    videoOnly: customization.videoOnly || false,
+                });
+            }
+        }
+        
+        function updateTherapyUI(therapy, customization) {
+            document.getElementById('headerSubtitle').textContent = therapy.name + ' · ' + formatDuration(totalSeconds);
+            document.getElementById('badgeMode').textContent = customization.lightMode || therapy.color_mode || 'general';
+            document.getElementById('therapyTitle').textContent = therapy.name;
+            document.getElementById('therapyDescription').textContent = therapy.description || '';
+            
+            // Show video badge if has video
+            const hasVideo = therapy.video_url || therapy.video_path;
+            document.getElementById('badgeVideo').classList.toggle('hidden', !hasVideo);
+        }
+        
+        async function startSession() {
+            if (isActive) return;
+            
+            try {
+                currentSession = await KryonAPI.startSession(currentTherapy.id, {
+                    duration: totalSeconds,
+                    colorMode: currentTherapy._activeCustomization?.lightMode,
+                });
+                
+                isActive = true;
+                isPaused = false;
+                elapsedSeconds = 0;
+                
+                updateStatusUI();
+                play();
+                
+                // Broadcast to external screen
+                const customization = currentTherapy._activeCustomization || {};
+                SessionChannel.Controller.startSession(currentSession, currentTherapy, {
+                    duration: totalSeconds,
+                    colorMode: customization.lightMode,
+                    playlist: playlist,
+                    playlistIndex: playlistIndex,
+                    playVideo: customization.playVideo !== false,
+                    videoOnly: customization.videoOnly || false,
+                });
+                
+                // Start Arduino
+                if (arduinoConnected) {
+                    await ArduinoSerial.startMode(customization.lightMode, customization.intensity);
+                }
+                
+            } catch (error) {
+                console.error('Error starting session:', error);
+                alert('Error al iniciar sesión: ' + error.message);
+            }
+        }
+        
+        async function endSession(status = 'completed') {
+            if (!currentSession) return;
+            
+            try {
+                await KryonAPI.endSession(currentSession.id, status, elapsedSeconds);
+                SessionChannel.Controller.endSession(status);
+                currentSession = null;
+                isActive = false;
+                isPaused = false;
+                updateStatusUI();
+                
+                if (arduinoConnected) {
+                    await ArduinoSerial.stop();
+                }
+            } catch (error) {
+                console.error('Error ending session:', error);
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // MEDIA
+        // ═══════════════════════════════════════════════════════
+        async function loadMedia(therapy, customization = null) {
+            // Always stop previous media first (critical for playlist transitions)
+            try { audioPlayer.pause(); } catch (_) {}
+            try { videoPlayer.pause(); } catch (_) {}
+            const videoPreview = document.getElementById('videoPreview');
+            try { videoPreview.pause(); } catch (_) {}
+
+            audioPlayer.src = '';
+            videoPlayer.src = '';
+            videoPreview.src = '';
+            try {
+                audioPlayer.currentTime = 0;
+                videoPlayer.currentTime = 0;
+                videoPreview.currentTime = 0;
+            } catch (_) {}
+
+            videoPlayer.classList.add('hidden');
+            document.getElementById('videoExternalIndicator').classList.add('hidden');
+            document.getElementById('videoPreviewContainer').classList.add('hidden');
+            document.getElementById('visualOverlay').classList.remove('hidden');
+            
+            const isVideoOnly = customization?.videoOnly === true;
+            
+            // Audio
+            let audioUrl = null;
+            if (!isVideoOnly) {
+                if (customization?.audioUrl) {
+                    audioUrl = customization.audioUrl;
+                } else if (therapy.audio_corto_url) {
+                    audioUrl = therapy.audio_corto_url;
+                } else if (therapy.audio_path) {
+                    audioUrl = therapy.audio_path;
+                }
+            }
+            
+            if (audioUrl) {
+                const fullAudioUrl = KryonAPI.getMediaUrl(audioUrl);
+                console.log('[Session] Loading audio:', fullAudioUrl);
+                audioPlayer.src = fullAudioUrl;
+                audioPlayer.volume = volumeSlider.value / 100;
+                audioPlayer.load();
+            }
+            
+            // Video
+            const shouldPlayVideo = customization ? customization.playVideo : true;
+            const hasVideo = therapy.video_path || therapy.video_url;
+            
+            if (hasVideo && shouldPlayVideo && !isVideoOnly) {
+                // Normal mode: video with overlay
+                const videoUrl = therapy.video_url || therapy.video_path;
+                videoPlayer.src = KryonAPI.getMediaUrl(videoUrl);
+                videoPlayer.classList.remove('hidden');
+                document.getElementById('visualOverlay').style.background = 'rgba(0,0,0,0.5)';
+            } else if (isVideoOnly && hasVideo) {
+                // Video-only mode: show monitor preview (mirrors external screen)
+                const videoUrl = therapy.video_url || therapy.video_path;
+                videoPreview.src = KryonAPI.getMediaUrl(videoUrl);
+                
+                document.getElementById('videoPreviewContainer').classList.remove('hidden');
+                document.getElementById('visualOverlay').classList.add('hidden');
+                document.getElementById('videoPreviewTitle').textContent = therapy.name;
+            }
+        }
+        
+        // Update video preview timer (called from main timer update)
+        function updateVideoPreviewTimer() {
+            const previewContainer = document.getElementById('videoPreviewContainer');
+            if (previewContainer.classList.contains('hidden')) return;
+
+            const effectiveTotal = Math.min(totalSeconds, maxAllowedSeconds);
+            const remaining = Math.max(0, effectiveTotal - elapsedSeconds);
+            document.getElementById('videoPreviewTimer').textContent = formatTime(remaining);
+            document.getElementById('videoPreviewElapsed').textContent = formatTime(elapsedSeconds);
+            document.getElementById('videoPreviewTotal').textContent = formatTime(effectiveTotal);
+
+            const progress = effectiveTotal > 0 ? (elapsedSeconds / effectiveTotal) * 100 : 0;
+            document.getElementById('videoPreviewProgress').style.width = `${Math.min(100, progress)}%`;
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // PLAYBACK CONTROLS
+        // ═══════════════════════════════════════════════════════
+        function togglePlayPause() {
+            if (!isActive) {
+                startSession();
+            } else if (isPaused) {
+                resume();
+            } else {
+                pause();
+            }
+        }
+        
+        function play() {
+            isPaused = false;
+            updateStatusUI();
+            
+            if (audioPlayer.src) audioPlayer.play().catch(console.error);
+            if (videoPlayer.src) videoPlayer.play().catch(() => {});
+            
+            // Video preview (for video-only mode)
+            const videoPreview = document.getElementById('videoPreview');
+            if (videoPreview.src) videoPreview.play().catch(() => {});
+            
+            startTimer();
+            SessionChannel.Controller.play();
+            startSyncInterval();
+            
+            if (arduinoConnected && currentTherapy) {
+                const c = currentTherapy._activeCustomization;
+                if (c) ArduinoSerial.startMode(c.lightMode, c.intensity);
+            }
+        }
+        
+        function resume() {
+            isPaused = false;
+            updateStatusUI();
+            
+            if (audioPlayer.src) audioPlayer.play().catch(console.error);
+            if (videoPlayer.src) videoPlayer.play().catch(() => {});
+            
+            // Video preview (for video-only mode)
+            const videoPreview = document.getElementById('videoPreview');
+            if (videoPreview.src) videoPreview.play().catch(() => {});
+            
+            startTimer();
+            SessionChannel.Controller.play();
+            startSyncInterval();
+        }
+        
+        function pause() {
+            isPaused = true;
+            updateStatusUI();
+            
+            audioPlayer.pause();
+            videoPlayer.pause();
+            
+            // Video preview (for video-only mode)
+            const videoPreview = document.getElementById('videoPreview');
+            if (videoPreview.src) videoPreview.pause();
+            
+            stopTimer();
+            
+            SessionChannel.Controller.pause();
+            stopSyncInterval();
+            
+            if (arduinoConnected) ArduinoSerial.pauseTherapy();
+        }
+        
+        async function stopSession() {
+            if (!isActive || !confirm('¿Detener la sesión?')) return;
+            
+            pause();
+            await endSession('cancelled');
+            goToSelection();
+        }
+        
+        async function restartSession() {
+            if (!isActive) return;
+            
+            // Reset
+            elapsedSeconds = 0;
+            updateTimerDisplay();
+            
+            if (audioPlayer.src) {
+                audioPlayer.currentTime = 0;
+            }
+            if (videoPlayer.src) {
+                videoPlayer.currentTime = 0;
+            }
+            
+            if (!isPaused) {
+                if (audioPlayer.src) audioPlayer.play().catch(() => {});
+                if (videoPlayer.src) videoPlayer.play().catch(() => {});
+            }
+        }
+        
+        function updateStatusUI() {
+            const badge = document.getElementById('badgeStatus');
+            const btn = document.getElementById('btnPlayPause');
+            const icon = document.getElementById('playIcon');
+            const label = document.getElementById('playLabel');
+            const secondary = document.getElementById('secondaryButtons');
+            
+            if (!isActive) {
+                badge.className = 'badge inactive';
+                badge.textContent = 'INACTIVA';
+                btn.className = 'btn-main play';
+                icon.textContent = '▶️';
+                label.textContent = 'Iniciar';
+                secondary.classList.add('hidden');
+            } else if (isPaused) {
+                badge.className = 'badge inactive';
+                badge.textContent = 'PAUSADA';
+                btn.className = 'btn-main play';
+                icon.textContent = '▶️';
+                label.textContent = 'Reanudar';
+                secondary.classList.remove('hidden');
+            } else {
+                badge.className = 'badge active';
+                badge.textContent = 'ACTIVA';
+                btn.className = 'btn-main pause';
+                icon.textContent = '⏸️';
+                label.textContent = 'Pausar';
+                secondary.classList.remove('hidden');
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // TIMER
+        // ═══════════════════════════════════════════════════════
+        function startTimer() {
+            stopTimer();
+            timerInterval = setInterval(() => {
+                elapsedSeconds++;
+                updateTimerDisplay();
+                
+                if (elapsedSeconds >= maxAllowedSeconds) {
+                    onMaxTimeReached();
+                    return;
+                }
+                
+                if (elapsedSeconds >= totalSeconds) {
+                    onTherapyComplete();
+                }
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        function updateTimerDisplay() {
+            const effectiveTotal = Math.min(totalSeconds, maxAllowedSeconds);
+            const remaining = Math.max(0, effectiveTotal - elapsedSeconds);
+            
+            timerDisplay.textContent = formatTime(remaining);
+            document.getElementById('totalTimeDisplay').textContent = formatTime(effectiveTotal);
+            
+            const progress = effectiveTotal > 0 ? (elapsedSeconds / effectiveTotal) * 100 : 0;
+            progressFill.style.width = `${Math.min(100, progress)}%`;
+            document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+            elapsedLabel.textContent = formatTime(elapsedSeconds);
+            totalLabel.textContent = formatTime(effectiveTotal);
+            
+            // Warning colors
+            if (remaining <= 10) {
+                timerDisplay.style.color = '#ef4444';
+            } else if (remaining <= 30) {
+                timerDisplay.style.color = '#f59e0b';
+            } else {
+                timerDisplay.style.color = '#fff';
+            }
+            
+            // Update video preview timer (for video-only mode)
+            updateVideoPreviewTimer();
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            return mins + ' min';
+        }
+        
+        function onMaxTimeReached() {
+            console.log('🛑 Tiempo máximo alcanzado');
+            pause();
+            if (arduinoConnected) ArduinoSerial.stop();
+
+            // If we're in a playlist, continue automatically to the next item.
+            if (playlist && playlistIndex < playlist.items.length - 1) {
+                (async () => {
+                    await endSession('completed');
+                    elapsedSeconds = 0;
+                    await loadTherapyFromPlaylist(playlistIndex + 1);
+                    setTimeout(() => {
+                        startSession();
+                    }, 350);
+                })().catch(console.error);
+                return;
+            }
+
+            endSession('completed');
+            showCompletionModal('¡Tiempo máximo alcanzado!', 'La terapia ha finalizado al llegar al límite.');
+        }
+        
+        async function onTherapyComplete() {
+            pause();
+            if (arduinoConnected) await ArduinoSerial.stop();
+            await endSession('completed');
+            
+            if (playlist && playlistIndex < playlist.items.length - 1) {
+                elapsedSeconds = 0;
+                await loadTherapyFromPlaylist(playlistIndex + 1);
+
+                // Auto-start next item in playlist
+                setTimeout(() => {
+                    startSession();
+                }, 350);
+            } else {
+                const title = playlist ? '¡Playlist Completada!' : '¡Sesión Completada!';
+                const message = playlist 
+                    ? `Has completado ${playlist.items.length} terapias.`
+                    : `Tu sesión de "${currentTherapy.name}" ha finalizado.`;
+                showCompletionModal(title, message);
+            }
+        }
+        
+        function showCompletionModal(title, message) {
+            document.getElementById('completionTitle').textContent = title;
+            document.getElementById('completionMessage').textContent = message;
+            document.getElementById('completionModal').classList.remove('hidden');
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // PLAYLIST
+        // ═══════════════════════════════════════════════════════
+        function showPlaylistCard() {
+            document.getElementById('playlistCard').classList.remove('hidden');
+            updatePlaylistUI();
+        }
+        
+        function updatePlaylistUI() {
+            const container = document.getElementById('playlistItems');
+            container.innerHTML = playlist.items.map((item, i) => `
+                <div class="playlist-item ${i === playlistIndex ? 'current' : ''} ${i < playlistIndex ? 'completed' : ''}">
+                    ${i < playlistIndex ? '✓' : i === playlistIndex ? '▶' : '○'}
+                    ${item.therapy_name || item.therapy?.name || 'Terapia'}
+                </div>
+            `).join('');
+            
+            document.getElementById('btnPrev').disabled = playlistIndex === 0;
+            document.getElementById('btnNext').disabled = playlistIndex === playlist.items.length - 1;
+        }
+        
+        async function loadTherapyFromPlaylist(index) {
+            if (index < 0 || index >= playlist.items.length) return;
+            
+            playlistIndex = index;
+            updatePlaylistUI();
+            
+            const item = playlist.items[index];
+            const therapy = item.therapy || await KryonAPI.getTherapy(item.therapy_id);
+
+            // Build session customization from therapy + playlist overrides
+            const hasAnyAudio = !!(therapy.audio_corto_url || therapy.audio_mediano_url || therapy.audio_largo_url || therapy.audio_path);
+            const hasVideo = !!(therapy.video_url || therapy.video_path);
+            const videoOnly = hasVideo && !hasAnyAudio;
+
+            const sessionTherapy = {
+                ...therapy,
+                _customization: {
+                    durationType: videoOnly ? 'video' : 'corto',
+                    lightMode: item.color_mode_override || therapy.color_mode || 'general',
+                    intensity: therapy.default_intensity || 50,
+                    maxDuration: item.duration_override || therapy.default_duration_sec || 600,
+                    audioUrl: (!videoOnly ? (therapy.audio_corto_url || therapy.audio_path || null) : null),
+                    // For playlists, auto-enable video when available; videoOnly forces video.
+                    playVideo: videoOnly ? true : !!hasVideo,
+                    videoOnly,
+                },
+            };
+
+            await prepareSession(sessionTherapy);
+        }
+        
+        async function prevTherapy() {
+            if (playlist && playlistIndex > 0) {
+                pause();
+                await endSession('completed');
+                elapsedSeconds = 0;
+                isActive = false;
+                await loadTherapyFromPlaylist(playlistIndex - 1);
+            }
+        }
+        
+        async function nextTherapy() {
+            if (playlist && playlistIndex < playlist.items.length - 1) {
+                pause();
+                await endSession('completed');
+                elapsedSeconds = 0;
+                isActive = false;
+                await loadTherapyFromPlaylist(playlistIndex + 1);
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // VOLUME
+        // ═══════════════════════════════════════════════════════
+        function updateVolumeIcon(vol) {
+            const icon = document.getElementById('volumeIcon');
+            if (vol === 0) icon.textContent = '🔇';
+            else if (vol < 30) icon.textContent = '🔈';
+            else if (vol < 70) icon.textContent = '🔉';
+            else icon.textContent = '🔊';
+        }
+        
+        function toggleMute() {
+            if (audioPlayer.volume > 0) {
+                previousVolume = volumeSlider.value;
+                volumeSlider.value = 0;
+                audioPlayer.volume = 0;
+            } else {
+                volumeSlider.value = previousVolume;
+                audioPlayer.volume = previousVolume / 100;
+            }
+            document.getElementById('volumeValue').textContent = volumeSlider.value + '%';
+            updateVolumeIcon(parseInt(volumeSlider.value));
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // MICROPHONE
+        // ═══════════════════════════════════════════════════════
+        async function requestMicPermission() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const mics = devices.filter(d => d.kind === 'audioinput');
+                const select = document.getElementById('micSelect');
+                
+                select.innerHTML = mics.length 
+                    ? mics.map(m => `<option value="${m.deviceId}">${m.label || 'Micrófono'}</option>`).join('')
+                    : '<option value="">No hay micrófonos</option>';
+            } catch (e) {
+                console.log('Mic permission not granted yet');
+            }
+        }
+        
+        async function toggleMic() {
+            const btn = document.getElementById('btnMic');
+            const icon = document.getElementById('micIcon');
+            const label = document.getElementById('micLabel');
+            
+            if (!micOn) {
+                try {
+                    const deviceId = document.getElementById('micSelect').value;
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: deviceId ? { deviceId: { exact: deviceId } } : true
+                    });
+                    
+                    // Create audio context for level monitoring
+                    const ctx = new AudioContext();
+                    const source = ctx.createMediaStreamSource(micStream);
+                    micAnalyser = ctx.createAnalyser();
+                    source.connect(micAnalyser);
+                    
+                    // Optional: play through speakers
+                    const gainNode = ctx.createGain();
+                    gainNode.gain.value = document.getElementById('micVolumeSlider').value / 100;
+                    source.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    micOn = true;
+                    btn.className = 'btn-mic on';
+                    icon.textContent = '🎤';
+                    label.textContent = 'Apagar Micrófono';
+                    
+                    // Start level monitoring
+                    updateMicLevel();
+                    
+                    // Refresh device list
+                    requestMicPermission();
+                } catch (e) {
+                    console.error('Mic error:', e);
+                    alert('Error al acceder al micrófono');
+                }
+            } else {
+                if (micStream) {
+                    micStream.getTracks().forEach(t => t.stop());
+                    micStream = null;
+                }
+                micOn = false;
+                btn.className = 'btn-mic off';
+                icon.textContent = '🎤';
+                label.textContent = 'Encender Micrófono';
+                document.getElementById('micLevelFill').style.width = '0%';
+            }
+        }
+        
+        function updateMicLevel() {
+            if (!micOn || !micAnalyser) return;
+            
+            const data = new Uint8Array(micAnalyser.frequencyBinCount);
+            micAnalyser.getByteFrequencyData(data);
+            const avg = data.reduce((a, b) => a + b, 0) / data.length;
+            const level = Math.min(100, (avg / 128) * 100);
+            
+            document.getElementById('micLevelFill').style.width = level + '%';
+            
+            requestAnimationFrame(updateMicLevel);
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // ARDUINO
+        // ═══════════════════════════════════════════════════════
+        function setupArduinoListeners() {
+            if (!ArduinoSerial.isSupported()) {
+                document.getElementById('btnArduino').style.display = 'none';
+                return;
+            }
+            
+            ArduinoSerial.on('stateChange', (state) => {
+                arduinoConnected = state === 'connected';
+                document.getElementById('btnArduino').classList.toggle('connected', arduinoConnected);
+            });
+            
+            ArduinoSerial.on('disconnect', () => {
+                arduinoConnected = false;
+                document.getElementById('btnArduino').classList.remove('connected');
+            });
+        }
+        
+        async function toggleArduinoPanel() {
+            if (!arduinoConnected) {
+                try {
+                    await ArduinoSerial.connect();
+                } catch (e) {
+                    console.error('Arduino error:', e);
+                }
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // EXTERNAL SCREEN
+        // ═══════════════════════════════════════════════════════
+        function setupChannelListeners() {
+            SessionChannel.on('peerConnect', () => {
+                document.getElementById('btnExternalScreen').classList.add('connected');
+            });
+            SessionChannel.on('peerDisconnect', () => {
+                document.getElementById('btnExternalScreen').classList.remove('connected');
+            });
+        }
+        
+        // Detect secondary screen using Multi-Screen Window Placement API
+        async function detectAndOpenSecondaryScreen() {
+            try {
+                // Check if API is available
+                if (!('getScreenDetails' in window)) {
+                    console.log('Multi-Screen API not available, using fallback');
+                    return false;
+                }
+                
+                // Check permission status first
+                const permissionStatus = await navigator.permissions.query({ name: 'window-management' });
+                console.log('Screen permission status:', permissionStatus.state);
+                
+                if (permissionStatus.state === 'denied') {
+                    console.log('Screen permission denied');
+                    return false;
+                }
+                
+                // Request permission for screen details (will prompt if not granted)
+                screenDetails = await window.getScreenDetails();
+                console.log('Screens detected:', screenDetails.screens.length);
+                
+                // Listen for screen changes
+                screenDetails.addEventListener('screenschange', () => {
+                    console.log('Screens changed, detecting secondary...');
+                    const secondary = screenDetails.screens.find(s => s !== screenDetails.currentScreen);
+                    if (secondary && (!externalWindow || externalWindow.closed)) {
+                        openExternalWindowOnScreen(secondary);
+                    }
+                });
+                
+                // Find a secondary screen (not the current one)
+                const currentScreen = screenDetails.currentScreen;
+                const secondaryScreen = screenDetails.screens.find(s => s !== currentScreen);
+                
+                if (secondaryScreen) {
+                    console.log('Secondary screen found:', secondaryScreen.label);
+                    await openExternalWindowOnScreen(secondaryScreen);
+                    return true;
+                } else {
+                    console.log('No secondary screen detected');
+                    return false;
+                }
+            } catch (error) {
+                console.warn('Screen detection error:', error);
+                // User might have denied permission
+                if (error.name === 'NotAllowedError') {
+                    console.log('Screen permission denied - user can manually open external window');
+                }
+                return false;
+            }
+        }
+        
+        // Open external window on a specific screen
+        async function openExternalWindowOnScreen(targetScreen) {
+            if (externalWindow && !externalWindow.closed) {
+                externalWindow.focus();
+                return;
+            }
+            
+            // Calculate position to center on target screen
+            const width = targetScreen.availWidth;
+            const height = targetScreen.availHeight;
+            const left = targetScreen.availLeft;
+            const top = targetScreen.availTop;
+            
+            // Open fullscreen on secondary screen
+            const features = `left=${left},top=${top},width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no,fullscreen=yes`;
+            
+            externalWindow = window.open(
+                '/external-screen.html',
+                'KryonExternalScreen',
+                features
+            );
+            
+            if (externalWindow) {
+                document.getElementById('btnExternalScreen').classList.add('connected');
+                
+                // Try to make it fullscreen after a short delay
+                setTimeout(() => {
+                    try {
+                        if (externalWindow && !externalWindow.closed) {
+                            externalWindow.moveTo(left, top);
+                            externalWindow.resizeTo(width, height);
+                        }
+                    } catch (e) {
+                        console.warn('Could not resize external window:', e);
+                    }
+                }, 500);
+            }
+        }
+        
+        function toggleExternalScreen() {
+            if (externalWindow && !externalWindow.closed) {
+                externalWindow.focus();
+            } else {
+                // Try to open on secondary screen first
+                if (screenDetails) {
+                    const currentScreen = screenDetails.currentScreen;
+                    const secondaryScreen = screenDetails.screens.find(s => s !== currentScreen);
+                    if (secondaryScreen) {
+                        openExternalWindowOnScreen(secondaryScreen);
+                        return;
+                    }
+                }
+                
+                // Fallback to regular popup
+                externalWindow = window.open(
+                    '/external-screen.html',
+                    'KryonExternalScreen',
+                    'width=1280,height=720,menubar=no,toolbar=no'
+                );
+                if (externalWindow) {
+                    document.getElementById('btnExternalScreen').classList.add('connected');
+                }
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // SYNC
+        // ═══════════════════════════════════════════════════════
+        function startSyncInterval() {
+            stopSyncInterval();
+            syncInterval = setInterval(() => {
+                SessionChannel.Controller.syncTimer(elapsedSeconds, totalSeconds, !isPaused);
+            }, 1000);
+        }
+        
+        function stopSyncInterval() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // EVENT LISTENERS
+        // ═══════════════════════════════════════════════════════
+        function setupEventListeners() {
+            // Volume
+            volumeSlider.addEventListener('input', () => {
+                const vol = volumeSlider.value;
+                audioPlayer.volume = vol / 100;
+                document.getElementById('volumeValue').textContent = vol + '%';
+                updateVolumeIcon(parseInt(vol));
+            });
+            
+            // Intensity
+            intensitySlider.addEventListener('input', async () => {
+                const val = intensitySlider.value;
+                document.getElementById('intensityValue').textContent = val + '%';
+                if (arduinoConnected && isActive) {
+                    await ArduinoSerial.setBrightness(val);
+                }
+            });
+            
+            // Mic volume
+            document.getElementById('micVolumeSlider').addEventListener('input', () => {
+                const val = document.getElementById('micVolumeSlider').value;
+                document.getElementById('micVolumeValue').textContent = val + '%';
+            });
+            
+            // Audio events
+            audioPlayer.addEventListener('canplaythrough', () => {
+                console.log('[Audio] Ready:', audioPlayer.src);
+            });
+            audioPlayer.addEventListener('error', (e) => {
+                console.error('[Audio] Error:', audioPlayer.src, e);
+            });
+            audioPlayer.addEventListener('ended', () => {
+                if (elapsedSeconds < totalSeconds && audioPlayer.src) {
+                    audioPlayer.currentTime = 0;
+                    audioPlayer.play().catch(() => {});
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    togglePlayPause();
+                } else if (e.code === 'Escape') {
+                    stopSession();
+                } else if (e.code === 'KeyR' && isActive) {
+                    restartSession();
+                } else if (e.code === 'ArrowRight' && playlist) {
+                    nextTherapy();
+                } else if (e.code === 'ArrowLeft' && playlist) {
+                    prevTherapy();
+                }
+            });
+            
+            // Before unload
+            window.addEventListener('beforeunload', (e) => {
+                if (currentSession && isActive && !isPaused) {
+                    navigator.sendBeacon(
+                        `${KryonAPI.BASE_URL}/api/sessions/${currentSession.id}/end`,
+                        JSON.stringify({ status: 'cancelled' })
+                    );
+                    e.preventDefault();
+                    e.returnValue = '¿Salir? La sesión se terminará.';
+                }
+            });
+        }
+        
+        function goToSelection() {
+            sessionStorage.removeItem('selectedTherapy');
+            sessionStorage.removeItem('selectedPlaylist');
+            window.location.href = '/selection.html';
+        }
+        
+        // ═══════════════════════════════════════════════════════
+        // START
+        // ═══════════════════════════════════════════════════════
+        init();
+        
+        window.addEventListener('unload', () => {
+            SessionChannel.destroy();
+            stopSyncInterval();
+            if (arduinoConnected) ArduinoSerial.disconnect();
+            if (micStream) micStream.getTracks().forEach(t => t.stop());
+        });
+    </script>
+</body>
+</html>

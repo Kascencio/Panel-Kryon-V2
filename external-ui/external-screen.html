@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla Externa | Cabina AQ</title>
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            cursor: none;
+        }
+        
+        .external-screen {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.15), transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(168, 85, 247, 0.15), transparent 50%),
+                        linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        /* Video Background */
+        .video-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+        
+        .video-bg video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Color Overlay (for Arduino colors) */
+        .color-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.3;
+            transition: background 1s ease, opacity 1s ease;
+            pointer-events: none;
+        }
+        
+        .color-overlay.pulse {
+            animation: colorPulse 2s ease-in-out infinite;
+        }
+        
+        .color-overlay.breathe {
+            animation: colorBreathe 4s ease-in-out infinite;
+        }
+        
+        @keyframes colorPulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes colorBreathe {
+            0%, 100% { opacity: 0.15; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .brand-icon {
+            font-size: 1.5rem;
+        }
+        
+        .brand-text h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        
+        .brand-text .sub {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            color: #22c55e;
+            font-size: 0.85rem;
+        }
+        
+        .connection-status.disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 5;
+        }
+        
+        /* Therapy Info */
+        .therapy-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.5));
+        }
+        
+        .therapy-name {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        .therapy-description {
+            font-size: 1.25rem;
+            color: #a5b4fc;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        /* Timer */
+        .timer-display {
+            font-size: 10rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            text-shadow: 0 0 60px rgba(99, 102, 241, 0.8);
+            letter-spacing: 0.1em;
+            line-height: 1;
+        }
+        
+        .timer-label {
+            font-size: 1rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-top: 0.5rem;
+        }
+        
+        /* Bottom Bar */
+        .bottom-bar {
+            position: relative;
+            z-index: 10;
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .time-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+            min-width: 60px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+        
+        /* Playlist Indicator */
+        .playlist-bar {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .playlist-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .playlist-dot.completed {
+            background: #22c55e;
+        }
+        
+        .playlist-dot.current {
+            background: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.8);
+            transform: scale(1.3);
+        }
+        
+        /* Status States */
+        .status-paused .timer-display {
+            animation: blink 1s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Waiting State */
+        .waiting-state {
+            text-align: center;
+        }
+        
+        .waiting-icon {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .waiting-text {
+            font-size: 2rem;
+            color: #94a3b8;
+        }
+        
+        .waiting-sub {
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Video-only mode - hide all UI overlays */
+        .video-only-mode .top-bar,
+        .video-only-mode .bottom-bar,
+        .video-only-mode .main-content,
+        .video-only-mode .color-overlay {
+            display: none !important;
+        }
+        
+        .video-only-mode .video-bg {
+            z-index: 100;
+        }
+        
+        .video-only-mode .video-bg .video-overlay {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="external-screen" id="screen">
+        <!-- Video Background -->
+        <div class="video-bg hidden" id="videoBg">
+            <video id="videoPlayer" loop muted playsinline></video>
+            <div class="video-overlay"></div>
+        </div>
+        
+        <!-- Color Overlay -->
+        <div class="color-overlay" id="colorOverlay"></div>
+        
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="brand">
+                <span class="brand-icon">🌀</span>
+                <div class="brand-text">
+                    <h1>Cabina AQ</h1>
+                    <span class="sub">Pantalla Externa</span>
+                </div>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span id="statusText">Conectando...</span>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Waiting State -->
+            <div class="waiting-state" id="waitingState">
+                <div class="waiting-icon">🧘‍♀️</div>
+                <div class="waiting-text">Esperando sesión...</div>
+                <div class="waiting-sub">Inicia una terapia desde el panel de control</div>
+            </div>
+            
+            <!-- Active Session -->
+            <div class="hidden" id="activeSession">
+                <div class="therapy-icon" id="therapyIcon">🎵</div>
+                <div class="therapy-name" id="therapyName">Terapia</div>
+                <div class="therapy-description" id="therapyDesc">Descripción de la terapia</div>
+                <div class="timer-display" id="timerDisplay">00:00</div>
+                <div class="timer-label">Tiempo restante</div>
+            </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <div class="progress-container">
+                <span class="time-label" id="elapsedLabel">0:00</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <span class="time-label" id="totalLabel">0:00</span>
+            </div>
+            <div class="playlist-bar hidden" id="playlistBar"></div>
+        </div>
+    </div>
+
+    <script src="./js/api.js"></script>
+    <script src="./js/broadcast-channel.js"></script>
+    <script>
+        // ─────────────────────────────────────────────────────
+        // State
+        // ─────────────────────────────────────────────────────
+        let state = {
+            therapy: null,
+            session: null,
+            isPlaying: false,
+            elapsed: 0,
+            total: 0,
+            colorMode: null,
+            playlist: null,
+            playlistIndex: 0,
+        };
+        
+        // ─────────────────────────────────────────────────────
+        // Elements
+        // ─────────────────────────────────────────────────────
+        const screen = document.getElementById('screen');
+        const waitingState = document.getElementById('waitingState');
+        const activeSession = document.getElementById('activeSession');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressFill = document.getElementById('progressFill');
+        const elapsedLabel = document.getElementById('elapsedLabel');
+        const totalLabel = document.getElementById('totalLabel');
+        const colorOverlay = document.getElementById('colorOverlay');
+        const videoBg = document.getElementById('videoBg');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const playlistBar = document.getElementById('playlistBar');
+        
+        // ─────────────────────────────────────────────────────
+        // Color Presets (matching Arduino)
+        // ─────────────────────────────────────────────────────
+        const COLOR_MAP = {
+            'rojo': { color: '#ff0000', mode: 'pulse' },
+            'naranja': { color: '#ff8000', mode: 'breathe' },
+            'amarillo': { color: '#ffff00', mode: '' },
+            'verde': { color: '#00ff00', mode: 'breathe' },
+            'azul': { color: '#0000ff', mode: '' },
+            'indigo': { color: '#4b0082', mode: '' },
+            'violeta': { color: '#9400d3', mode: 'pulse' },
+            'blanco': { color: '#ffffff', mode: '' },
+            'rainbow': { color: 'linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)', mode: '' },
+            'relax': { color: '#6496ff', mode: 'breathe' },
+            'energy': { color: '#ff6432', mode: 'pulse' },
+            'focus': { color: '#32c896', mode: '' },
+            'default': { color: '#6366f1', mode: '' },
+        };
+        
+        // ─────────────────────────────────────────────────────
+        // Init
+        // ─────────────────────────────────────────────────────
+        function init() {
+            // Initialize as display
+            SessionChannel.init('display');
+            
+            // Setup message handlers
+            SessionChannel.on('message', handleMessage);
+            SessionChannel.on('peerConnect', () => {
+                setConnectionStatus(true);
+            });
+            SessionChannel.on('peerDisconnect', () => {
+                setConnectionStatus(false);
+            });
+            
+            // Initial state
+            setConnectionStatus(false);
+        }
+        
+        // ─────────────────────────────────────────────────────
+        // Message Handling
+        // ─────────────────────────────────────────────────────
+        function handleMessage({ type, payload }) {
+            console.log('Received:', type, payload);
+            
+            switch (type) {
+                case 'FULL_STATE':
+                    state = { ...state, ...payload };
+                    if (state.therapy) {
+                        showActiveSession();
+                        updateUI();
+                    }
+                    break;
+                    
+                case 'SESSION_START':
+                    state.session = payload.session;
+                    state.therapy = payload.therapy;
+                    state.total = payload.duration || 600;
+                    state.elapsed = 0;
+                    state.colorMode = payload.colorMode;
+                    state.playlist = payload.playlist;
+                    state.playlistIndex = payload.playlistIndex || 0;
+                    state.playVideo = payload.playVideo !== false; // Default true
+                    state.videoOnly = payload.videoOnly || false;  // Video-only mode
+                    showActiveSession();
+                    updateUI();
+                    // In videoOnly mode, always play video on external screen
+                    loadMedia(payload.therapy, state.playVideo || state.videoOnly);
+                    break;
+                    
+                case 'SESSION_END':
+                    state.session = null;
+                    state.therapy = null;
+                    state.isPlaying = false;
+                    showWaitingState();
+                    break;
+                    
+                case 'THERAPY_CHANGE':
+                    state.therapy = payload.therapy;
+                    state.total = payload.duration || 600;
+                    state.elapsed = 0;
+                    state.playlistIndex = payload.index || 0;
+                    if (payload.playlist !== undefined) state.playlist = payload.playlist;
+                    state.colorMode = payload.colorMode;
+                    state.playVideo = payload.playVideo !== false;
+                    state.videoOnly = payload.videoOnly || false;
+                    showActiveSession();
+                    updateUI();
+                    // In videoOnly mode, always play video on external screen
+                    loadMedia(payload.therapy, state.playVideo || state.videoOnly);
+                    break;
+                    
+                case 'PLAY':
+                    state.isPlaying = true;
+                    screen.classList.remove('status-paused');
+                    if (videoPlayer.src) videoPlayer.play().catch(() => {});
+                    break;
+                    
+                case 'PAUSE':
+                    state.isPlaying = false;
+                    screen.classList.add('status-paused');
+                    if (videoPlayer.src) videoPlayer.pause();
+                    break;
+                    
+                case 'STOP':
+                    state.isPlaying = false;
+                    screen.classList.add('status-paused');
+                    break;
+                    
+                case 'TIMER_SYNC':
+                    state.elapsed = payload.elapsed;
+                    state.total = payload.total;
+                    state.isPlaying = payload.isPlaying;
+                    updateTimer();
+                    break;
+                    
+                case 'COLOR_CHANGE':
+                    state.colorMode = payload.colorMode;
+                    applyColor(payload.colorMode);
+                    break;
+                    
+                case 'PLAYLIST_UPDATE':
+                    state.playlist = payload.playlist;
+                    state.playlistIndex = payload.index;
+                    updatePlaylistBar();
+                    break;
+            }
+        }
+        
+        // ─────────────────────────────────────────────────────
+        // UI Updates
+        // ─────────────────────────────────────────────────────
+        function showWaitingState() {
+            waitingState.classList.remove('hidden');
+            activeSession.classList.add('hidden');
+            videoBg.classList.add('hidden');
+            colorOverlay.style.background = '';
+            screen.classList.remove('video-only-mode');
+        }
+        
+        function showActiveSession() {
+            waitingState.classList.add('hidden');
+            activeSession.classList.remove('hidden');
+            
+            // Apply video-only mode if needed
+            if (state.videoOnly) {
+                screen.classList.add('video-only-mode');
+            } else {
+                screen.classList.remove('video-only-mode');
+            }
+        }
+        
+        function updateUI() {
+            if (!state.therapy) return;
+            
+            // Therapy info
+            document.getElementById('therapyName').textContent = state.therapy.name || 'Terapia';
+            document.getElementById('therapyDesc').textContent = state.therapy.description || '';
+            
+            // Icon based on type
+            const icon = state.therapy.video_path ? '🎬' : '🎵';
+            document.getElementById('therapyIcon').textContent = icon;
+            
+            // Timer
+            updateTimer();
+            
+            // Color
+            if (state.colorMode) {
+                applyColor(state.colorMode);
+            }
+            
+            // Playlist
+            updatePlaylistBar();
+        }
+        
+        function updateTimer() {
+            const remaining = Math.max(0, state.total - state.elapsed);
+            timerDisplay.textContent = formatTime(remaining);
+            
+            const progress = state.total > 0 ? (state.elapsed / state.total) * 100 : 0;
+            progressFill.style.width = `${Math.min(100, progress)}%`;
+            
+            elapsedLabel.textContent = formatTime(state.elapsed);
+            totalLabel.textContent = formatTime(state.total);
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function applyColor(colorMode) {
+            const preset = COLOR_MAP[colorMode?.toLowerCase()] || COLOR_MAP['default'];
+            
+            colorOverlay.style.background = preset.color;
+            colorOverlay.className = 'color-overlay';
+            
+            if (preset.mode) {
+                colorOverlay.classList.add(preset.mode);
+            }
+        }
+        
+        function updatePlaylistBar() {
+            if (!state.playlist || !state.playlist.items || state.playlist.items.length <= 1) {
+                playlistBar.classList.add('hidden');
+                return;
+            }
+            
+            playlistBar.classList.remove('hidden');
+            playlistBar.innerHTML = state.playlist.items.map((item, i) => {
+                let className = 'playlist-dot';
+                if (i < state.playlistIndex) className += ' completed';
+                if (i === state.playlistIndex) className += ' current';
+                return `<div class="${className}"></div>`;
+            }).join('');
+        }
+        
+        function loadMedia(therapy, playVideo = true) {
+            if (!therapy) return;
+
+            // Always stop previous media first (important on playlist transitions)
+            try {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+            } catch (_) {}
+            
+            // Video - only show if therapy has video AND playVideo is enabled
+            const hasVideo = therapy.video_path || therapy.video_url;
+            if (hasVideo && playVideo) {
+                const videoUrl = therapy.video_url || therapy.video_path;
+                videoPlayer.src = KryonAPI.getMediaUrl(videoUrl);
+                videoBg.classList.remove('hidden');
+                if (state.isPlaying) {
+                    videoPlayer.play().catch(() => {});
+                }
+            } else {
+                videoBg.classList.add('hidden');
+                videoPlayer.src = '';
+            }
+        }
+        
+        function setConnectionStatus(connected) {
+            if (connected) {
+                connectionStatus.classList.remove('disconnected');
+                statusText.textContent = 'Conectado';
+            } else {
+                connectionStatus.classList.add('disconnected');
+                statusText.textContent = 'Desconectado';
+            }
+        }
+        
+        // ─────────────────────────────────────────────────────
+        // Keyboard Shortcuts
+        // ─────────────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape') {
+                window.close();
+            } else if (e.code === 'KeyF') {
+                // Toggle fullscreen
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+        
+        // ─────────────────────────────────────────────────────
+        // Cleanup
+        // ─────────────────────────────────────────────────────
+        window.addEventListener('unload', () => {
+            SessionChannel.destroy();
+        });
+        
+        // ─────────────────────────────────────────────────────
+        // Start
+        // ─────────────────────────────────────────────────────
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cabina AQ · Loading</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="loading-body">
+    <div class="loading-screen" data-loading-screen>
+      <div class="loading-center">
+        <!-- Logo / anillo giratorio (similar a LoadingScreen.tsx) -->
+        <div class="loading-logo" aria-hidden="true">
+          <div class="loading-ring spin-slow">
+            <div class="loading-ring-inner"></div>
+            <div class="loading-icon">⚛︎</div>
+            <div class="loading-glow"></div>
+          </div>
+        </div>
+
+        <h1 class="loading-title">CABINA AQ</h1>
+        <p class="loading-subtitle">Sistema Cuántico Bioenergético</p>
+
+        <!-- Barra de progreso -->
+        <div class="loading-progress">
+          <div class="progress gradient" aria-label="Progreso">
+            <div data-loading-bar></div>
+          </div>
+          <div class="loading-progress-meta">
+            <span class="loading-meta-left" data-loading-state>Inicializando</span>
+            <span class="loading-meta-right" data-loading-label>0%</span>
+          </div>
+        </div>
+
+        <!-- Mensaje rotativo -->
+        <div class="loading-message" aria-live="polite">
+          <span class="loading-message-icon" data-loading-message-icon>⚛︎</span>
+          <span data-loading-message-text>Calibrando sistema cuántico...</span>
+        </div>
+
+        <!-- Puntos decorativos -->
+        <div class="loading-dots" aria-hidden="true">
+          <div class="dot" style="animation-delay: 0s; opacity: 0.2;"></div>
+          <div class="dot" style="animation-delay: .2s; opacity: 0.35;"></div>
+          <div class="dot" style="animation-delay: .4s; opacity: 0.5;"></div>
+          <div class="dot" style="animation-delay: .6s; opacity: 0.65;"></div>
+          <div class="dot" style="animation-delay: .8s; opacity: 0.8;"></div>
+        </div>
+
+        <div class="loading-footer">Versión 2.0 · Sistema Avanzado de Terapia Cuántica</div>
+
+        <div style="margin-top: 18px; display:flex; justify-content:center; gap:10px;">
+          <a class="btn" href="./index.html">Volver</a>
+        </div>
+      </div>
+
+      <!-- Partículas de fondo (se inyectan por JS) -->
+      <div class="loading-particles" data-loading-particles aria-hidden="true"></div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
