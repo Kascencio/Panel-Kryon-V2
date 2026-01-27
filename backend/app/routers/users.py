@@ -47,9 +47,12 @@ class AssignPlanRequest(BaseModel):
 # Endpoints
 # ──────────────────────────────────────────────────────────────
 @router.get("", response_model=list[UserOut])
-async def list_users(db: Session = Depends(get_db), _: User = Depends(require_admin)):
+async def list_users(db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
     """Listar todos los usuarios."""
-    users = db.execute(select(User)).scalars().all()
+    query = select(User)
+    if current_user.role == Role.admin:
+        query = query.where(User.role == Role.user)
+    users = db.execute(query).scalars().all()
     result = []
     for u in users:
         plan_name = None
@@ -73,7 +76,7 @@ async def list_users(db: Session = Depends(get_db), _: User = Depends(require_ad
 async def create_user(
     form: CreateUserRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Crear usuario (admin puede asignar rol)."""
     existing = db.execute(select(User).where(User.email == form.email)).scalar_one_or_none()
@@ -84,6 +87,9 @@ async def create_user(
         role = Role(form.role)
     except ValueError:
         raise HTTPException(status_code=400, detail="Rol inválido")
+
+    if current_user.role == Role.admin and role != Role.user:
+        raise HTTPException(status_code=403, detail="Solo puedes crear usuarios comunes")
 
     user = User(
         email=form.email,
@@ -132,12 +138,15 @@ async def update_credits(
     user_id: int,
     form: UpdateCreditsRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Ajustar créditos de un usuario (+N o -N)."""
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if current_user.role == Role.admin and user.role != Role.user:
+        raise HTTPException(status_code=403, detail="No tienes permisos sobre este usuario")
 
     user.credits_balance += form.delta
 
@@ -167,12 +176,15 @@ async def assign_plan(
     user_id: int,
     form: AssignPlanRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
 ):
     """Asignar plan a usuario (reemplaza el anterior)."""
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if current_user.role == Role.admin and user.role != Role.user:
+        raise HTTPException(status_code=403, detail="No tienes permisos sobre este usuario")
 
     plan = db.get(Plan, form.plan_id)
     if not plan:

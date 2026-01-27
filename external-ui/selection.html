@@ -7,6 +7,55 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="./styles.css">
     <style>
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 5, 15, 0.9);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+        }
+
+        .loading-overlay.hidden { display: none; }
+
+        .loading-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            background: rgba(15, 15, 30, 0.85);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+            max-width: 420px;
+            width: 90%;
+        }
+
+        .loading-spinner {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-top-color: #6366f1;
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-subtitle {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; min-height: 100vh; display: flex; flex-direction: column; }
         
         .topbar {
@@ -357,6 +406,14 @@
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loadingOverlay" aria-live="polite">
+        <div class="loading-card">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <div class="loading-title">Cargando terapias...</div>
+            <div class="loading-subtitle">Preparando tu panel</div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Top Bar -->
         <div class="topbar">
@@ -483,88 +540,92 @@
 
     <!-- Customize Therapy Modal -->
     <div class="modal-overlay hidden" id="customizeModal">
-        <div class="card" style="max-width: 500px; width: 95%;" role="dialog" aria-modal="true" aria-labelledby="customizeModalTitle" aria-describedby="customizeModalDesc">
-            <div class="card-header">
+        <div class="modal-card customize-modal" role="dialog" aria-modal="true" aria-labelledby="customizeModalTitle" aria-describedby="customizeModalDesc">
+            <div class="modal-header">
                 <h2 class="card-title" id="customizeModalTitle">🎚️ Personalizar Terapia</h2>
                 <button class="btn secondary" aria-label="Cerrar" onclick="closeModal('customizeModal')">✕</button>
             </div>
             
-            <!-- Therapy Name -->
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <span id="customizeTherapyName" style="font-size: 1.25rem; font-weight: 600; color: #e2e8f0;"></span>
-                <p id="customizeModalDesc" style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.25rem;">Configuración temporal para esta sesión</p>
-            </div>
-            
-            <!-- Duration Type -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">⏱️ Duración</label>
-                <div id="durationButtons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-                    <button class="duration-btn active" data-duration="corto" onclick="selectDuration('corto')">
-                        <span class="dur-label">Corto</span>
-                        <span class="dur-time">0-5 min</span>
-                    </button>
-                    <button class="duration-btn" data-duration="mediano" onclick="selectDuration('mediano')">
-                        <span class="dur-label">Mediano</span>
-                        <span class="dur-time">6-20 min</span>
-                    </button>
-                    <button class="duration-btn" data-duration="largo" onclick="selectDuration('largo')">
-                        <span class="dur-label">Largo</span>
-                        <span class="dur-time">21min-3hrs</span>
-                    </button>
+            <div class="modal-content">
+                <!-- Therapy Name -->
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <span id="customizeTherapyName" style="font-size: 1.25rem; font-weight: 600; color: #e2e8f0;"></span>
+                    <p id="customizeModalDesc" style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.25rem;">Configuración temporal para esta sesión</p>
                 </div>
-                <p id="durationNote" style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; text-align: center;">
-                    El audio se detendrá automáticamente al llegar al límite
-                </p>
-            </div>
-            
-            <!-- Light Mode -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">💡 Modo de Luz (temporal)</label>
-                <div id="lightModeGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-                    <!-- Filled dynamically -->
+                
+                <!-- Duration Type -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">⏱️ Duración</label>
+                    <div id="durationButtons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                        <button class="duration-btn active" data-duration="corto" onclick="selectDuration('corto')">
+                            <span class="dur-label">Corto</span>
+                            <span class="dur-time">0-5 min</span>
+                        </button>
+                        <button class="duration-btn" data-duration="mediano" onclick="selectDuration('mediano')">
+                            <span class="dur-label">Mediano</span>
+                            <span class="dur-time">6-20 min</span>
+                        </button>
+                        <button class="duration-btn" data-duration="largo" onclick="selectDuration('largo')">
+                            <span class="dur-label">Largo</span>
+                            <span class="dur-time">21min-3hrs</span>
+                        </button>
+                    </div>
+                    <p id="durationNote" style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; text-align: center;">
+                        El audio se detendrá automáticamente al llegar al límite
+                    </p>
                 </div>
-                <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; text-align: center;">
-                    Solo para esta sesión. El modo default no se modifica.
-                </p>
-            </div>
-            
-            <!-- Intensity -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: flex; justify-content: space-between; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">
-                    <span>🔆 Intensidad Inicial</span>
-                    <span id="intensityValue" style="color: #e2e8f0;">50%</span>
-                </label>
-                <input type="range" id="intensitySlider" min="0" max="100" value="50" 
-                       style="width: 100%; accent-color: #6366f1;"
-                       oninput="updateIntensityValue()">
-            </div>
-            
-            <!-- Video Option -->
-            <div id="videoOptionSection" class="hidden" style="margin-bottom: 1.5rem;">
-                <label style="display: flex; align-items: center; gap: 0.75rem; color: #a5b4fc; font-weight: 500; cursor: pointer;">
-                    <input type="checkbox" id="playVideoCheckbox" style="width: 18px; height: 18px; accent-color: #6366f1;" onchange="toggleVideoOption()">
-                    <span>🎬 Reproducir video de fondo</span>
-                </label>
-                <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem; margin-left: 2rem;">Esta terapia incluye video visual</p>
-            </div>
+                
+                <!-- Light Mode -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">💡 Modo de Luz (temporal)</label>
+                    <div id="lightModeGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                        <!-- Filled dynamically -->
+                    </div>
+                    <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; text-align: center;">
+                        Solo para esta sesión. El modo default no se modifica.
+                    </p>
+                </div>
+                
+                <!-- Intensity -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: flex; justify-content: space-between; color: #a5b4fc; margin-bottom: 0.5rem; font-weight: 500;">
+                        <span>🔆 Intensidad Inicial</span>
+                        <span id="intensityValue" style="color: #e2e8f0;">50%</span>
+                    </label>
+                    <input type="range" id="intensitySlider" min="0" max="100" value="50" 
+                           style="width: 100%; accent-color: #6366f1;"
+                           oninput="updateIntensityValue()">
+                </div>
+                
+                <!-- Video Option -->
+                <div id="videoOptionSection" class="hidden" style="margin-bottom: 1.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.75rem; color: #a5b4fc; font-weight: 500; cursor: pointer;">
+                        <input type="checkbox" id="playVideoCheckbox" style="width: 18px; height: 18px; accent-color: #6366f1;" onchange="toggleVideoOption()">
+                        <span>🎬 Reproducir video de fondo</span>
+                    </label>
+                    <p style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem; margin-left: 2rem;">Esta terapia incluye video visual</p>
+                </div>
 
-            <!-- Preview -->
-            <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem;">Vista previa</div>
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div id="previewIcon" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: #06b6d4;">🔄</div>
-                    <div>
-                        <div id="previewModeName" style="color: #e2e8f0; font-weight: 600;">Patrón Complejo</div>
-                        <div id="previewModeDesc" style="color: #94a3b8; font-size: 0.85rem;">11 patrones variables</div>
+                <!-- Preview -->
+                <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem;">Vista previa</div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div id="previewIcon" style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: #06b6d4;">🔄</div>
+                        <div>
+                            <div id="previewModeName" style="color: #e2e8f0; font-weight: 600;">Patrón Complejo</div>
+                            <div id="previewModeDesc" style="color: #94a3b8; font-size: 0.85rem;">11 patrones variables</div>
+                        </div>
                     </div>
                 </div>
             </div>
             
             <!-- Actions -->
-            <div class="btn-group" style="justify-content: flex-end;">
-                <button class="btn secondary" onclick="closeModal('customizeModal')">Cancelar</button>
-                <button class="btn secondary" onclick="saveCustomizationToPlaylist()">💾 Guardar en playlist</button>
-                <button class="btn primary" onclick="startCustomizedTherapy()">▶️ Iniciar Terapia</button>
+            <div class="modal-footer">
+                <div class="btn-group" style="justify-content: flex-end;">
+                    <button class="btn secondary" onclick="closeModal('customizeModal')">Cancelar</button>
+                    <button class="btn secondary" onclick="saveCustomizationToPlaylist()">💾 Guardar en playlist</button>
+                    <button class="btn primary" onclick="startCustomizedTherapy()">▶️ Iniciar Terapia</button>
+                </div>
             </div>
         </div>
     </div>
@@ -578,6 +639,96 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .modal-card {
+            background: rgba(31, 41, 55, 0.92);
+            border: 1px solid rgba(75, 85, 99, 0.4);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px -16px rgba(0,0,0,0.6);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+            flex-shrink: 0;
+        }
+        
+        .modal-content {
+            padding: 1.25rem;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.35);
+            border-radius: 999px;
+        }
+        
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 999px;
+        }
+        
+        .modal-footer {
+            padding: 1.25rem;
+            border-top: 1px solid rgba(75, 85, 99, 0.3);
+            flex-shrink: 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-height: 700px) {
+            .modal-card {
+                max-height: 95vh;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .modal-card {
+                max-width: 95vw;
+                max-height: 95vh;
+            }
+            
+            .modal-header,
+            .modal-content,
+            .modal-footer {
+                padding: 1rem;
+            }
+            
+            #durationButtons,
+            #lightModeGrid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            
+            .btn-group {
+                flex-direction: column !important;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #lightModeGrid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
         }
         
         .duration-btn {
@@ -652,7 +803,7 @@
         }
     </style>
 
-    <script src="./js/api.js"></script>
+    <script src="./js/api.js?v=20260126"></script>
     <script>
         // ─────────────────────────────────────────────────────
         // State
@@ -680,6 +831,8 @@
         async function init() {
             if (!KryonAPI.requireAuth()) return;
 
+            showLoading(true);
+
             try {
                 user = await KryonAPI.getProfile();
                 updateCreditsDisplay();
@@ -696,7 +849,15 @@
             } catch (error) {
                 console.error('Init error:', error);
                 KryonAPI.logout();
+            } finally {
+                showLoading(false);
             }
+        }
+
+        function showLoading(visible) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (!overlay) return;
+            overlay.classList.toggle('hidden', !visible);
         }
 
         // ─────────────────────────────────────────────────────
@@ -844,6 +1005,35 @@
             return '🔒 Bloqueada';
         }
 
+        function getTherapyDurationLabel(t) {
+            // Collect available durations
+            const durations = [];
+            if (t.audio_corto_url) durations.push(t.duration_corto_sec || 300);
+            if (t.audio_mediano_url) durations.push(t.duration_mediano_sec || 1200);
+            if (t.audio_largo_url) durations.push(t.duration_largo_sec || 3600);
+            
+            // If video-only, use default duration
+            if (durations.length === 0) {
+                if (t.video_url || t.video_path) {
+                    const sec = t.default_duration_sec || 600;
+                    const mins = Math.floor(sec / 60);
+                    return `${mins} min`;
+                }
+                return '--';
+            }
+            
+            // Show min-max range or single value
+            const minDur = Math.min(...durations);
+            const maxDur = Math.max(...durations);
+            const minMins = Math.floor(minDur / 60);
+            const maxMins = Math.floor(maxDur / 60);
+            
+            if (minMins === maxMins) {
+                return `${minMins} min`;
+            }
+            return `${minMins}-${maxMins} min`;
+        }
+
         function renderTherapies(items) {
             const grid = document.getElementById('therapyGrid');
             
@@ -873,6 +1063,12 @@
                 const lockLabel = getTherapyLockLabel(t, parsedAccess);
                 const lockBadge = locked ? `<span class="badge locked">${lockLabel}</span>` : '';
                 
+                // Get light mode information
+                const lightMode = t.color_mode ? KryonAPI.getLightModeById(t.color_mode) : null;
+                const lightModeBadge = lightMode 
+                    ? `<span class="badge color" style="border-color: ${lightMode.color}50; background: ${lightMode.color}20; color: ${lightMode.color};">${lightMode.icon} ${lightMode.name}</span>` 
+                    : '';
+                
                 return `
                 <div class="therapy-item ${locked ? 'locked' : ''} ${selectedTherapy?.id === t.id ? 'selected' : ''}" 
                      onclick="selectTherapy(${t.id})" data-id="${t.id}">
@@ -883,9 +1079,9 @@
                     <div class="meta">
                         ${lockBadge}
                         ${mediaIcon}
-                        <span class="badge duration">${KryonAPI.formatDuration(t.default_duration_sec)}</span>
+                        <span class="badge duration">${getTherapyDurationLabel(t)}</span>
+                        ${lightModeBadge}
                         ${t.category ? `<span class="badge">${t.category}</span>` : ''}
-                        ${t.color_mode ? `<span class="badge color">${t.color_mode}</span>` : ''}
                     </div>
                     <div class="therapy-actions">
                         <button class="btn primary sm" onclick="event.stopPropagation(); quickStartTherapy(${t.id});">▶️ Iniciar</button>
@@ -920,7 +1116,7 @@
             // Media type badge (removed summary panel, so no DOM update here)
             
             // Reset customization to therapy defaults
-            customLightMode = selectedTherapy.color_mode || 'general';
+            customLightMode = 'general'; // Default: Patrón Complejo
             customIntensity = selectedTherapy.default_intensity || 50;
             customDurationType = 'corto';
             customLightTouched = false;
@@ -956,7 +1152,13 @@
             // Reset to therapy defaults
             customLightMode = selectedTherapy.color_mode || 'general';
             customIntensity = selectedTherapy.default_intensity || 50;
-            customDurationType = 'corto';
+            
+            // Auto-detect duration type based on default_duration_sec
+            const defaultDuration = selectedTherapy.default_duration_sec || 300;
+            customDurationType = (typeof KryonAPI !== 'undefined' && KryonAPI.getDurationTypeFromSeconds) 
+                ? KryonAPI.getDurationTypeFromSeconds(defaultDuration)
+                : getDurationTypeFromSecondsLocal(defaultDuration);
+            
             customPlayVideo = false;
             customLightTouched = false;
             customDurationTouched = false;
@@ -1113,7 +1315,7 @@
                 // Temporal overrides (no modifica el default)
                 _customization: {
                     durationType: hasAnyAudio ? customDurationType : 'video',
-                    lightMode: customLightMode,
+                    lightMode: customLightMode || 'general', // Default: Patrón Complejo
                     intensity: customIntensity,
                     maxDuration: audioConfig.maxDuration,
                     audioUrl: audioConfig.audioUrl,
@@ -1125,6 +1327,16 @@
             sessionStorage.setItem('selectedTherapy', JSON.stringify(sessionConfig));
             sessionStorage.removeItem('selectedPlaylist');
             window.location.href = '/session.html';
+        }
+
+
+        // ─────────────────────────────────────────────────────
+        // Helper: Duration Type Detection (Fallback)
+        // ─────────────────────────────────────────────────────
+        function getDurationTypeFromSecondsLocal(seconds) {
+            if (seconds <= 300) return 'corto';      // 0-300s (0-5 min)
+            if (seconds <= 1200) return 'mediano';   // 301-1200s (6-20 min)
+            return 'largo';                          // 1201s+ (21+ min)
         }
 
         // ─────────────────────────────────────────────────────
@@ -1145,16 +1357,30 @@
             const hasVideo = selectedTherapy.video_url || selectedTherapy.video_path;
             const isVideoOnly = hasVideo && !hasAnyAudio;
             
-            // Use default settings
+            // Determine duration type based on default_duration_sec
+            const defaultDuration = selectedTherapy.default_duration_sec || 300;
+            
+            // Use API function if available, otherwise use local fallback
+            const durationType = (typeof KryonAPI !== 'undefined' && KryonAPI.getDurationTypeFromSeconds) 
+                ? KryonAPI.getDurationTypeFromSeconds(defaultDuration)
+                : getDurationTypeFromSecondsLocal(defaultDuration);
+            
+            console.log('[Quick Start] Therapy:', selectedTherapy.name);
+            console.log('[Quick Start] Default Duration:', defaultDuration, 'seconds');
+            console.log('[Quick Start] Detected Type:', durationType);
+            
+            // Use default settings with correct duration
             const audioConfig = hasAnyAudio 
-                ? KryonAPI.getAudioForDuration(selectedTherapy, 'corto')
-                : { audioUrl: null, maxDuration: selectedTherapy.default_duration_sec || 600 };
+                ? KryonAPI.getAudioForDuration(selectedTherapy, durationType)
+                : { audioUrl: null, maxDuration: defaultDuration };
+            
+            console.log('[Quick Start] Audio Config:', audioConfig);
             
             const sessionConfig = {
                 ...selectedTherapy,
                 _customization: {
-                    durationType: isVideoOnly ? 'video' : 'corto',
-                    lightMode: selectedTherapy.color_mode || 'general',
+                    durationType: isVideoOnly ? 'video' : durationType,
+                    lightMode: 'general', // Default: Patrón Complejo
                     intensity: selectedTherapy.default_intensity || 50,
                     maxDuration: audioConfig.maxDuration,
                     audioUrl: audioConfig.audioUrl,

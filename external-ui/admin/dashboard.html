@@ -902,6 +902,12 @@
             <header class="top-bar">
                 <h1 id="pageTitle">Dashboard</h1>
                 <div class="top-bar-actions">
+                    <a href="../selection.html" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-right: 0.75rem; text-decoration: none; padding: 0.65rem 1.25rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        Ir a Terapias
+                    </a>
                     <button class="btn-logout" onclick="logout()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -1028,15 +1034,14 @@
                                     <th>Categoría</th>
                                     <th>Acceso</th>
                                     <th>Duración</th>
-                                    <th>Audio</th>
-                                    <th>Video</th>
+                                    <th>Tipo</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="therapiesTable">
                                 <tr>
-                                    <td colspan="9" style="text-align: center; color: #64748b;">Cargando...</td>
+                                    <td colspan="8" style="text-align: center; color: #64748b;">Cargando...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1434,10 +1439,25 @@
                            style="width: 100%;">
                 </div>
                 
+                <!-- Duración predeterminada -->
+                <div class="form-group">
+                    <label>Duración predeterminada *</label>
+                    <select name="default_duration" id="createDefaultDuration" required style="margin-bottom: 0.5rem;">
+                        <option value="300">5 minutos (Corto)</option>
+                        <option value="900" selected>15 minutos (Mediano)</option>
+                        <option value="1800">30 minutos (Largo)</option>
+                        <option value="custom">⚙️ Personalizado...</option>
+                    </select>
+                    <input type="number" name="custom_duration_min" id="createCustomDuration" 
+                           placeholder="Duración en minutos" min="1" max="180" 
+                           style="display:none; width: 100%; padding: 0.75rem 1rem; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem;">
+                    <small class="help-text">Esta es la duración que se usará por defecto al iniciar la terapia con "▶️ Iniciar"</small>
+                </div>
+                
                 <!-- Tipos de duración habilitados -->
                 <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
                     <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">⏱️ Tipos de duración disponibles</h4>
-                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 1rem;">La duración real se detectará automáticamente del audio subido</p>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 1rem;">Selecciona qué opciones de duración estarán disponibles para personalizar</p>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                             <input type="checkbox" name="enable_corto" id="createEnableCorto" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
@@ -2051,12 +2071,40 @@
                 document.getElementById('userRole').textContent = currentUser.role;
                 document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.email).substring(0, 2).toUpperCase();
 
+                applyRoleRestrictions();
+
                 // Load data
                 loadDashboardData();
             } catch (error) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('kryon_token');
                 window.location.href = 'login.html';
+            }
+        }
+
+        function applyRoleRestrictions() {
+            if (!currentUser) return;
+
+            if (currentUser.role === 'admin') {
+                const navPlans = document.querySelector('[data-section="plans"]');
+                const navAnalytics = document.querySelector('[data-section="analytics"]');
+                if (navPlans) navPlans.style.display = 'none';
+                if (navAnalytics) navAnalytics.style.display = 'none';
+
+                const sectionPlans = document.getElementById('section-plans');
+                const sectionAnalytics = document.getElementById('section-analytics');
+                if (sectionPlans) sectionPlans.style.display = 'none';
+                if (sectionAnalytics) sectionAnalytics.style.display = 'none';
+
+                const plansCard = document.getElementById('totalPlans')?.closest('.stat-card');
+                if (plansCard) plansCard.style.display = 'none';
+
+                const roleSelect = document.querySelector('#createUserForm select[name="role"]');
+                if (roleSelect) {
+                    roleSelect.innerHTML = '<option value="user">Usuario</option>';
+                    roleSelect.value = 'user';
+                    roleSelect.disabled = true;
+                }
             }
         }
 
@@ -2123,19 +2171,36 @@
 
         async function loadDashboardData() {
             try {
-                const [users, therapies, plans] = await Promise.all([
+                const requests = [
                     apiCall('/api/admin/users'),
-                    apiCall('/api/therapies'),
-                    apiCall('/api/admin/plans')
-                ]);
+                    apiCall('/api/therapies')
+                ];
+
+                if (currentUser?.role === 'superadmin') {
+                    requests.push(apiCall('/api/admin/plans'));
+                }
+
+                const results = await Promise.all(requests);
+                const users = results[0] || [];
+                const therapies = results[1] || [];
+                const plans = results[2] || [];
 
                 document.getElementById('totalUsers').textContent = users.length;
                 document.getElementById('totalTherapies').textContent = therapies.length;
-                document.getElementById('totalPlans').textContent = plans.length;
+                if (currentUser?.role === 'superadmin') {
+                    document.getElementById('totalPlans').textContent = plans.length;
+                }
                 document.getElementById('activeUsers').textContent = users.filter(u => u.is_active).length;
 
                 // Fill recent activity table on dashboard
-                loadRecentActivity();
+                if (currentUser?.role === 'superadmin') {
+                    loadRecentActivity();
+                } else {
+                    const tbody = document.getElementById('activityTable');
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8;">No disponible para este rol</td></tr>';
+                    }
+                }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
             }
@@ -2144,6 +2209,11 @@
         async function loadRecentActivity() {
             const tbody = document.getElementById('activityTable');
             if (!tbody) return;
+
+            if (currentUser?.role !== 'superadmin') {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8;">No disponible para este rol</td></tr>';
+                return;
+            }
 
             try {
                 const sessions = await apiCall('/api/analytics/sessions/recent?limit=10');
@@ -2231,22 +2301,38 @@
                     return;
                 }
 
-                tbody.innerHTML = therapies.map(t => `
-                    <tr>
-                        <td>${t.id}</td>
-                        <td>${t.name}</td>
-                        <td>${t.category || '-'}</td>
-                        <td><span class="badge ${String(t.access_level || 'basic') === 'premium' ? 'warn' : 'active'}">${String(t.access_level || 'basic') === 'premium' ? 'Premium' : 'Básica'}</span></td>
-                        <td>${Math.floor(t.default_duration_sec / 60)} min</td>
-                        <td>${t.audio_url ? '✅' : '❌'}</td>
-                        <td>${t.video_url ? '✅' : '❌'}</td>
-                        <td><span class="badge ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'Activa' : 'Inactiva'}</span></td>
-                        <td>
-                            <button class="action-btn edit" onclick="openEditTherapyModal(${t.id})">Editar</button>
-                            <button class="action-btn delete" onclick="deleteTherapy(${t.id})" style="background: #dc2626; margin-left: 4px;">✕</button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = therapies.map(t => {
+                    // Determine media type based on what files exist
+                    const hasAudio = !!(t.audio_corto_url || t.audio_mediano_url || t.audio_largo_url || t.audio_url);
+                    const hasVideo = !!(t.video_url || t.video_path);
+                    
+                    let mediaIcon;
+                    if (hasAudio && hasVideo) {
+                        mediaIcon = '🎵🎬'; // Both
+                    } else if (hasVideo) {
+                        mediaIcon = '🎬'; // Video only
+                    } else if (hasAudio) {
+                        mediaIcon = '🎵'; // Audio only
+                    } else {
+                        mediaIcon = '❓'; // None
+                    }
+                    
+                    return `
+                        <tr>
+                            <td>${t.id}</td>
+                            <td>${t.name}</td>
+                            <td>${t.category || '-'}</td>
+                            <td><span class="badge ${String(t.access_level || 'basic') === 'premium' ? 'warn' : 'active'}">${String(t.access_level || 'basic') === 'premium' ? 'Premium' : 'Básica'}</span></td>
+                            <td>${Math.floor(t.default_duration_sec / 60)} min</td>
+                            <td style="font-size: 1.25rem; text-align: center;">${mediaIcon}</td>
+                            <td><span class="badge ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'Activa' : 'Inactiva'}</span></td>
+                            <td>
+                                <button class="action-btn edit" onclick="openEditTherapyModal(${t.id})">Editar</button>
+                                <button class="action-btn delete" onclick="deleteTherapy(${t.id})" style="background: #dc2626; margin-left: 4px;">✕</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (error) {
                 showToast('Error al cargar terapias', 'error');
             }
@@ -2318,6 +2404,21 @@
             }
             if (name === 'createTherapy') {
                 loadTherapyFormOptions();
+                
+                // Setup custom duration field toggle
+                const durationSelect = document.getElementById('createDefaultDuration');
+                const customInput = document.getElementById('createCustomDuration');
+                
+                durationSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customInput.style.display = 'block';
+                        customInput.required = true;
+                    } else {
+                        customInput.style.display = 'none';
+                        customInput.required = false;
+                        customInput.value = '';
+                    }
+                });
             }
             document.getElementById(`modal-${name}`).classList.add('show');
         }
@@ -2442,12 +2543,27 @@
             const enableMediano = form.enable_mediano.checked;
             const enableLargo = form.enable_largo.checked;
             
+            // Calculate default_duration_sec from selection
+            const defaultDurationSelect = form.default_duration.value;
+            const customDurationMin = form.custom_duration_min?.value;
+            
+            let defaultDurationSec;
+            if (defaultDurationSelect === 'custom') {
+                if (!customDurationMin || customDurationMin < 1) {
+                    showToast('Por favor ingresa una duración válida en minutos', 'error');
+                    return;
+                }
+                defaultDurationSec = parseInt(customDurationMin) * 60;
+            } else {
+                defaultDurationSec = parseInt(defaultDurationSelect);
+            }
+            
             const data = {
                 name: form.name.value,
                 description: form.description.value || null,
                 category: form.category.value || null,
                 access_level: form.access_level?.value || 'basic',
-                default_duration_sec: 300, // Default 5 min, se actualizará con el audio
+                default_duration_sec: defaultDurationSec,
                 color_mode: form.color_mode.value,
                 default_intensity: parseInt(form.default_intensity.value),
                 media_type: mediaType,

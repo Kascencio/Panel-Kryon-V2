@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from ..db import get_db
 from ..models import User, Plan
-from ..auth import require_admin
+from ..auth import require_superadmin
 
 router = APIRouter(prefix="/api/admin/plans", tags=["admin-plans"])
 
@@ -47,7 +47,7 @@ class UpdatePlanRequest(BaseModel):
 # Endpoints
 # ──────────────────────────────────────────────────────────────
 @router.get("", response_model=list[PlanOut])
-async def list_plans(db: Session = Depends(get_db), _: User = Depends(require_admin)):
+async def list_plans(db: Session = Depends(get_db), _: User = Depends(require_superadmin)):
     """Listar todos los planes."""
     plans = db.execute(select(Plan)).scalars().all()
     return [PlanOut.model_validate(p) for p in plans]
@@ -57,7 +57,7 @@ async def list_plans(db: Session = Depends(get_db), _: User = Depends(require_ad
 async def create_plan(
     form: CreatePlanRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Crear nuevo plan."""
     existing = db.execute(select(Plan).where(Plan.name == form.name)).scalar_one_or_none()
@@ -81,7 +81,7 @@ async def create_plan(
 async def get_plan(
     plan_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Obtener un plan por ID."""
     plan = db.get(Plan, plan_id)
@@ -95,7 +95,7 @@ async def update_plan(
     plan_id: int,
     form: UpdatePlanRequest,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Actualizar plan."""
     plan = db.get(Plan, plan_id)
@@ -124,7 +124,7 @@ async def update_plan(
 async def delete_plan(
     plan_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Eliminar plan (soft delete: desactivar)."""
     plan = db.get(Plan, plan_id)

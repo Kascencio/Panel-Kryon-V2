@@ -12,7 +12,7 @@ from ..models import (
     User, Therapy, TherapySession, SessionStatus,
     CreditLedger, ActivityLog, DailyStats, Plan, UserPlan
 )
-from ..auth import require_admin
+from ..auth import require_superadmin
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -134,7 +134,7 @@ def get_date_range(period: str) -> tuple[datetime, datetime]:
 @router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Estadísticas principales del dashboard."""
     now = datetime.utcnow()
@@ -241,7 +241,7 @@ async def get_therapy_usage(
     period: str = Query("month", regex="^(today|week|month|quarter|year|all)$"),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Uso de terapias por periodo."""
     start_date, end_date = get_date_range(period)
@@ -295,7 +295,7 @@ async def get_user_activity(
     period: str = Query("month", regex="^(today|week|month|quarter|year|all)$"),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Actividad de usuarios por periodo."""
     start_date, end_date = get_date_range(period)
@@ -340,7 +340,7 @@ async def get_user_activity(
 async def get_sessions_timeline(
     period: str = Query("month", regex="^(week|month|quarter|year)$"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Serie temporal de sesiones por día."""
     start_date, end_date = get_date_range(period)
@@ -367,7 +367,7 @@ async def get_sessions_timeline(
 async def get_credits_flow(
     period: str = Query("month", regex="^(week|month|quarter|year)$"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Flujo de créditos (agregados vs consumidos) por día."""
     start_date, end_date = get_date_range(period)
@@ -406,7 +406,7 @@ async def get_recent_sessions(
     limit: int = Query(50, ge=1, le=200),
     status: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Sesiones recientes con detalles."""
     stmt = (
@@ -445,7 +445,7 @@ async def get_activity_log(
     limit: int = Query(100, ge=1, le=500),
     action: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Log de actividad del sistema."""
     stmt = (
@@ -479,7 +479,7 @@ async def get_activity_log(
 async def get_category_distribution(
     period: str = Query("month", regex="^(today|week|month|quarter|year|all)$"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Distribución de sesiones por categoría de terapia."""
     start_date, end_date = get_date_range(period)
@@ -507,7 +507,7 @@ async def get_category_distribution(
 async def get_hours_distribution(
     period: str = Query("month", regex="^(today|week|month|quarter|year|all)$"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Distribución de sesiones por hora del día."""
     start_date, end_date = get_date_range(period)
@@ -538,7 +538,7 @@ async def export_sessions(
     end_date: datetime = Query(...),
     format: str = Query("json", regex="^(json|csv)$"),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Exportar sesiones para análisis externo."""
     stmt = (
@@ -596,7 +596,7 @@ async def export_analytics_report(
     start_date: datetime = Query(...),
     end_date: datetime = Query(...),
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_superadmin),
 ):
     """Exportación profesional de analíticas (Excel con múltiples hojas y gráficas)."""
     try:

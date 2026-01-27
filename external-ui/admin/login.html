@@ -408,8 +408,9 @@
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(userData));
 
-                // Redirigir al dashboard
-                window.location.href = 'dashboard.html';
+                // Redirigir al loading y luego al dashboard
+                sessionStorage.setItem('postLoginRedirect', '../admin/dashboard.html');
+                window.location.href = '../loading.html';
 
             } catch (error) {
                 showError(error.message);
@@ -428,7 +429,8 @@
                 .then(r => r.json())
                 .then(user => {
                     if (user.id && (user.role === 'admin' || user.role === 'superadmin')) {
-                        window.location.href = 'dashboard.html';
+                        sessionStorage.setItem('postLoginRedirect', '../admin/dashboard.html');
+                        window.location.href = '../loading.html';
                     }
                 })
                 .catch(() => {

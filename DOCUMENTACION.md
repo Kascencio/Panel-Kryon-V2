@@ -1,5 +1,168 @@
 # Documentación del proyecto Panel Kryon V2
 
+## 🚀 Inicio Rápido
+
+### Requerimientos del Sistema
+
+**Software requerido:**
+- **Python 3.9+** (para el backend FastAPI)
+- **Node.js y npm** (opcional, solo si se desea usar un servidor estático más avanzado)
+- **SQLite** (incluido con Python, se usa por defecto) o **PostgreSQL** (opcional, para producción)
+
+**Hardware recomendado:**
+- Mínimo 4GB RAM
+- 500MB de espacio libre en disco (para code + media)
+
+### Instalación y Configuración
+
+#### 1. Clonar o descargar el repositorio
+
+```bash
+cd /ruta/deseada
+# Asumiendo que ya tienes el código en /Users/keaf/Downloads/panel-kryon
+```
+
+#### 2. Configurar el Backend
+
+**a) Crear entorno virtual:**
+
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # En macOS/Linux
+# venv\Scripts\activate   # En Windows
+```
+
+**b) Instalar dependencias:**
+
+```bash
+pip install -r requirements.txt
+```
+
+**c) Configurar variables de entorno:**
+
+Crear archivo `.env` en la carpeta `backend/`:
+
+```env
+# Base de datos (SQLite por defecto)
+DATABASE_URL=sqlite:///./app.db
+
+# Seguridad
+SECRET_KEY=tu-clave-secreta-super-segura-cambiar-en-produccion
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+
+# CORS (para desarrollo local)
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+
+# Directorio de media
+MEDIA_DIR=./media
+
+# Superadmin inicial
+INITIAL_SUPERADMIN_EMAIL=admin@panelkryon.com
+INITIAL_SUPERADMIN_PASSWORD=admin123
+INITIAL_SUPERADMIN_NAME=Super Admin
+```
+
+> **⚠️ Importante:** En producción, cambia `SECRET_KEY` y las credenciales del superadmin.
+
+#### 3. Iniciar el Backend
+
+**Opción A: Usando el script de inicio (recomendado):**
+
+```bash
+cd backend
+chmod +x start.sh  # Solo la primera vez en macOS/Linux
+./start.sh
+```
+
+El backend estará disponible en `http://127.0.0.1:8000`
+
+**Opción B: Manualmente:**
+
+```bash
+cd backend
+source venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### 4. Iniciar el Frontend (UI Externa)
+
+**En otra terminal:**
+
+```bash
+cd external-ui
+python3 -m http.server 5173
+```
+
+El frontend estará disponible en `http://localhost:5173`
+
+### Verificación de la Instalación
+
+1. **Backend health check:**
+   ```bash
+   curl http://127.0.0.1:8000/health
+   # Respuesta esperada: {"status": "ok"}
+   ```
+
+2. **API docs:**
+   Abrir en navegador: `http://127.0.0.1:8000/docs`
+
+3. **Frontend:**
+   Abrir en navegador: `http://localhost:5173`
+
+4. **Login admin:**
+   - URL: `http://localhost:5173/admin/login.html`
+   - Email: `admin@panelkryon.com`
+   - Password: `admin123` (usar las credenciales de tu `.env`)
+
+### Flujo de Uso Típico
+
+**Para Administradores:**
+
+1. Acceder a `http://localhost:5173/admin/login.html`
+2. Iniciar sesión con credenciales de admin
+3. Navegar al dashboard para:
+   - Crear terapias
+   - Gestionar usuarios
+   - Configurar planes
+   - Ver analytics
+4. Usar botón "Ir a Terapias" para probar la interfaz de usuario
+
+**Para Usuarios:**
+
+1. Acceder a `http://localhost:5173/login.html`
+2. Iniciar sesión o registrarse
+3. Seleccionar terapia en `selection.html`
+4. Iniciar sesión de terapia
+5. Controlar reproducción en `session.html`
+
+### Solución de Problemas Comunes
+
+**Error: `ModuleNotFoundError`**
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+**Error: Puerto 8000 o 5173 en uso**
+```bash
+# Para backend, cambiar puerto:
+uvicorn app.main:app --reload --port 8001
+
+# Para frontend, cambiar puerto:
+python3 -m http.server 5174
+```
+
+**Error: Base de datos bloqueada**
+```bash
+# Reiniciar el backend
+cd backend
+./start.sh
+```
+
+---
+
 ## 1) Resumen ejecutivo
 Panel Kryon V2 es una plataforma para administrar terapias (audio/video), usuarios, créditos y sesiones, con un **backend FastAPI** y una **UI estática desacoplada** para prototipado visual. El backend expone una API REST con autenticación JWT, gestión de planes y créditos, catálogos de terapias, sesiones, analíticas y categorías/modos de luz. La UI externa (carpeta `external-ui/`) ofrece páginas HTML/CSS/JS con interacciones simuladas para flujos de usuario y administración. 【F:backend/app/main.py†L1-L92】【F:backend/app/auth.py†L1-L110】【F:external-ui/README.md†L1-L190】
 

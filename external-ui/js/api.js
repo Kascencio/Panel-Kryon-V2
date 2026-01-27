@@ -273,6 +273,19 @@ function getDurationLimits(durationType) {
 }
 
 /**
+ * Determina el tipo de duración basado en segundos
+ * @param {number} seconds - Duración en segundos
+ * @returns {string} 'corto' | 'mediano' | 'largo'
+ */
+function getDurationTypeFromSeconds(seconds) {
+    if (seconds <= DURATION_LIMITS.corto.max) return 'corto';
+    if (seconds <= DURATION_LIMITS.mediano.max) return 'mediano';
+    return 'largo';
+}
+// Updated: 2026-01-26 - Added automatic duration detection
+
+
+/**
  * Obtiene la URL del audio y duración máxima según el tipo
  * @param {Object} therapy - Objeto de terapia con audio_corto_url, etc.
  * @param {string} durationType - 'corto' | 'mediano' | 'largo'
@@ -372,6 +385,7 @@ function getLightModeById(id) {
 // Utilities
 // ─────────────────────────────────────────────────────
 function formatDuration(seconds) {
+    if (!seconds || isNaN(seconds) || seconds <= 0) return '--:--';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -432,6 +446,7 @@ window.KryonAPI = {
     // Duration
     DURATION_LIMITS,
     getDurationLimits,
+    getDurationTypeFromSeconds,
     getAudioForDuration,
     isDurationValid,
     getDurationLabels,

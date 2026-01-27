@@ -78,7 +78,10 @@ function setupLoadingMock() {
     bar.style.width = `${Math.floor(v)}%`;
     if (label) label.textContent = `${Math.round(v)}%`;
     if (state) state.textContent = v >= 100 ? 'Listo' : 'Inicializando';
-    if (v >= 100) clearInterval(id);
+    if (v >= 100) {
+      clearInterval(id);
+      onLoadingComplete();
+    }
   }, 240);
 
   // mensajes rotativos (1s) con pulso
@@ -112,6 +115,46 @@ function setupLoadingMock() {
       p.style.animationDelay = `${delay}s`;
       particlesRoot.appendChild(p);
     }
+  }
+
+  async function onLoadingComplete() {
+    try {
+      await openExternalWindowOnSecondary();
+    } catch (e) {
+      console.warn('External screen open failed:', e);
+    }
+
+    const next = sessionStorage.getItem('postLoginRedirect') || 'selection.html';
+    sessionStorage.removeItem('postLoginRedirect');
+    setTimeout(() => {
+      window.location.href = next;
+    }, 400);
+  }
+}
+
+async function openExternalWindowOnSecondary() {
+  try {
+    if (!('getScreenDetails' in window)) return false;
+
+    const permissionStatus = await navigator.permissions.query({ name: 'window-management' });
+    if (permissionStatus.state === 'denied') return false;
+
+    const screenDetails = await window.getScreenDetails();
+    const currentScreen = screenDetails.currentScreen;
+    const secondaryScreen = screenDetails.screens.find((s) => s !== currentScreen);
+
+    if (!secondaryScreen) return false;
+
+    const width = secondaryScreen.availWidth;
+    const height = secondaryScreen.availHeight;
+    const left = secondaryScreen.availLeft;
+    const top = secondaryScreen.availTop;
+    const features = `left=${left},top=${top},width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no,fullscreen=yes`;
+
+    window.open('external-screen.html', 'KryonExternalScreen', features);
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 

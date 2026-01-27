@@ -556,6 +556,59 @@
             outline-offset: 2px;
         }
         
+        /* Arduino Button - Prominent */
+        .btn-arduino {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: clamp(0.6rem, 1.5vw, 0.85rem);
+            border: 2px dashed rgba(239, 68, 68, 0.6);
+            border-radius: clamp(8px, 1.5vw, 10px);
+            font-size: clamp(0.9rem, 1.8vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(127, 29, 29, 0.3);
+            color: #f87171;
+            margin-bottom: 0.75rem;
+        }
+        
+        .btn-arduino:hover {
+            background: rgba(153, 27, 27, 0.5);
+            border-color: rgba(239, 68, 68, 0.8);
+        }
+        
+        .btn-arduino.connected {
+            background: rgba(21, 128, 61, 0.3);
+            border: 2px solid rgba(34, 197, 94, 0.6);
+            color: #4ade80;
+        }
+        
+        .btn-arduino.connected:hover {
+            background: rgba(21, 128, 61, 0.4);
+        }
+        
+        .arduino-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse-red 1.5s ease-in-out infinite;
+        }
+        
+        .btn-arduino.connected .arduino-indicator {
+            background: #22c55e;
+            animation: none;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+        
         .btn-main.play {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
             color: #fff;
@@ -669,6 +722,24 @@
             border: none;
         }
         
+        /* Seek slider - Bigger for easy touch */
+        .seek-slider {
+            height: 12px;
+        }
+        
+        .seek-slider::-webkit-slider-thumb {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 2px 10px rgba(34, 197, 94, 0.5);
+        }
+        
+        .seek-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+        
         .slider-input:focus {
             outline: 2px solid rgba(99, 102, 241, 0.5);
             outline-offset: 2px;
@@ -694,6 +765,210 @@
         
         .volume-slider {
             flex: 1;
+        }
+
+        /* Playback Controls */
+        .playback-controls {
+            margin-top: 1.25rem;
+        }
+
+        /* Playback Time Display */
+        .playback-time-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .playback-time-display .time-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .playback-time-display .time-separator {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        /* Modern Seek Bar */
+        .seek-bar-container {
+            margin-bottom: 1rem;
+        }
+
+        .seek-bar {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .seek-bar::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(71, 85, 105, 0.8);
+            border-radius: 4px;
+        }
+
+        .seek-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            cursor: grab;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+            margin-top: -4px;
+        }
+
+        .seek-bar::-webkit-slider-thumb:hover {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.6);
+        }
+
+        .seek-bar::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .seek-bar::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(71, 85, 105, 0.8);
+            border-radius: 4px;
+        }
+
+        .seek-bar::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            cursor: grab;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+            border: none;
+        }
+
+        .seek-bar::-moz-range-thumb:hover {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.6);
+        }
+
+        .seek-bar::-moz-range-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        /* Playback Buttons */
+        .playback-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-playback {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            min-height: 48px;
+            padding: 0.5rem;
+            background: rgba(55, 65, 81, 0.7);
+            border: 1px solid rgba(107, 114, 128, 0.5);
+            border-radius: 8px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-playback .btn-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .btn-playback .btn-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .btn-playback:hover {
+            background: rgba(75, 85, 99, 0.8);
+            border-color: rgba(139, 92, 246, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-playback:active {
+            transform: translateY(0);
+        }
+
+        .btn-playback.primary {
+            min-width: 64px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: transparent;
+        }
+
+        .btn-playback.primary:hover {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .playback-buttons {
+                gap: 0.35rem;
+            }
+            
+            .btn-playback {
+                min-width: 48px;
+                min-height: 44px;
+            }
+            
+            .btn-playback .btn-icon {
+                font-size: 1.1rem;
+            }
+            
+            .btn-playback .btn-label {
+                font-size: 0.65rem;
+            }
+        }
+
+        /* Legacy styles (kept for backwards compatibility) */
+        .playback-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-tertiary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.45rem 0.6rem;
+            border-radius: 6px;
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(107, 114, 128, 0.4);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-tertiary:hover {
+            background: rgba(75, 85, 99, 0.7);
+        }
+
+        .playback-time {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            font-family: 'Courier New', monospace;
+            min-width: 48px;
+            text-align: center;
         }
         
         /* Level Meter */
@@ -1051,6 +1326,13 @@
                         Control de Sesión
                     </div>
                     <div class="control-card-body">
+                        <!-- Botón de Arduino (prominente) -->
+                        <button class="btn-arduino" id="btnArduinoMain" onclick="toggleArduinoPanel()" 
+                                title="Conectar Arduino" aria-label="Conectar Arduino">
+                            <span class="arduino-indicator" id="arduinoIndicator"></span>
+                            <span id="arduinoLabel">🔌 Conectar Arduino</span>
+                        </button>
+                        
                         <!-- Botón principal (cambia según estado) -->
                         <button class="btn-main play" id="btnPlayPause" onclick="togglePlayPause()" 
                                 title="Reproducir/Pausar (Espacio)" aria-label="Reproducir o pausar">
@@ -1094,6 +1376,50 @@
                                    min="0" max="100" value="80"
                                    aria-label="Volumen">
                             <span id="volumeValue" style="min-width: 40px; text-align: right; color: #a5b4fc; font-size: 0.85rem;">80%</span>
+                        </div>
+
+                        <div class="playback-controls">
+                            <!-- Time Display -->
+                            <div class="playback-time-display">
+                                <span class="time-label" id="timeCurrent">00:00</span>
+                                <span class="time-separator">/</span>
+                                <span class="time-label" id="timeTotal">00:00</span>
+                            </div>
+                            
+                            <!-- Seek Slider -->
+                            <div class="seek-bar-container">
+                                <input type="range" 
+                                       class="seek-bar" 
+                                       id="timeSlider"
+                                       min="0" 
+                                       max="0" 
+                                       value="0" 
+                                       step="1"
+                                       aria-label="Tiempo de reproducción">
+                            </div>
+                            
+                            <!-- Control Buttons -->
+                            <div class="playback-buttons">
+                                <button class="btn-playback" onclick="shiftPlayback(-30)" title="Retroceder 30s">
+                                    <span class="btn-icon">⏪</span>
+                                    <span class="btn-label">30s</span>
+                                </button>
+                                <button class="btn-playback" onclick="shiftPlayback(-10)" title="Retroceder 10s">
+                                    <span class="btn-icon">⏮</span>
+                                    <span class="btn-label">10s</span>
+                                </button>
+                                <button class="btn-playback primary" onclick="togglePlayPause()" title="Play/Pause" id="playbackControlBtn">
+                                    <span class="btn-icon" id="playbackIcon">▶️</span>
+                                </button>
+                                <button class="btn-playback" onclick="shiftPlayback(10)" title="Adelantar 10s">
+                                    <span class="btn-icon">⏭</span>
+                                    <span class="btn-label">10s</span>
+                                </button>
+                                <button class="btn-playback" onclick="shiftPlayback(30)" title="Adelantar 30s">
+                                    <span class="btn-icon">⏩</span>
+                                    <span class="btn-label">30s</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1185,7 +1511,7 @@
     <!-- Audio Player (hidden) -->
     <audio id="audioPlayer"></audio>
 
-    <script src="./js/api.js"></script>
+    <script src="./js/api.js?v=20260126"></script>
     <script src="./js/arduino-serial.js"></script>
     <script src="./js/broadcast-channel.js"></script>
     <script>
@@ -1203,6 +1529,7 @@
         let totalSeconds = 0;
         let maxAllowedSeconds = 300;
         let timerInterval = null;
+        let isSeeking = false;
         
         // Arduino & External Screen
         let arduinoConnected = false;
@@ -1228,6 +1555,9 @@
         const volumeSlider = document.getElementById('volumeSlider');
         const btnPlayPause = document.getElementById('btnPlayPause');
         const intensitySlider = document.getElementById('intensitySlider');
+        const timeSlider = document.getElementById('timeSlider');
+        const timeCurrentLabel = document.getElementById('timeCurrent');
+        const timeTotalLabel = document.getElementById('timeTotal');
         
         // ═══════════════════════════════════════════════════════
         // INIT
@@ -1270,10 +1600,13 @@
             
             setupEventListeners();
             requestMicPermission();
+            updateStatusUI();
             
             // Auto-iniciar la sesión después de cargar
             setTimeout(() => {
-                startSession();
+                if (canStartTherapy()) {
+                    startSession();
+                }
             }, 500);
         }
         
@@ -1286,7 +1619,7 @@
             // Get customization
             const customization = therapy._customization || {
                 durationType: 'corto',
-                lightMode: therapy.color_mode || 'general',
+                lightMode: 'general', // Default: Patrón Complejo
                 intensity: therapy.default_intensity || 50,
                 maxDuration: therapy.default_duration_sec || 300,
                 audioUrl: therapy.audio_corto_url,
@@ -1300,6 +1633,14 @@
             maxAllowedSeconds = (customization.videoOnly === true)
                 ? totalSeconds
                 : KryonAPI.getDurationLimits(customization.durationType).max;
+            
+            // Initialize time slider range immediately
+            if (timeSlider) {
+                const effectiveTotal = Math.min(totalSeconds, maxAllowedSeconds);
+                timeSlider.max = String(effectiveTotal);
+                timeSlider.value = '0';
+            }
+            
             updateTimerDisplay();
 
             // Update UI (after duration is known)
@@ -1328,7 +1669,12 @@
         
         function updateTherapyUI(therapy, customization) {
             document.getElementById('headerSubtitle').textContent = therapy.name + ' · ' + formatDuration(totalSeconds);
-            document.getElementById('badgeMode').textContent = customization.lightMode || therapy.color_mode || 'general';
+            
+            // Get readable light mode name
+            const lightModeId = customization.lightMode || therapy.color_mode || 'general';
+            const lightModeInfo = KryonAPI.getLightModeById(lightModeId);
+            document.getElementById('badgeMode').textContent = lightModeInfo ? lightModeInfo.name : lightModeId;
+            
             document.getElementById('therapyTitle').textContent = therapy.name;
             document.getElementById('therapyDescription').textContent = therapy.description || '';
             
@@ -1336,9 +1682,19 @@
             const hasVideo = therapy.video_url || therapy.video_path;
             document.getElementById('badgeVideo').classList.toggle('hidden', !hasVideo);
         }
+
+        function canStartTherapy() {
+            // En la plataforma principal, Arduino debe estar conectado
+            if (!arduinoConnected) {
+                alert('Conecta el Arduino para iniciar la terapia.');
+                return false;
+            }
+            return true;
+        }
         
         async function startSession() {
             if (isActive) return;
+            if (!canStartTherapy()) return;
             
             try {
                 currentSession = await KryonAPI.startSession(currentTherapy.id, {
@@ -1511,6 +1867,7 @@
         }
         
         function resume() {
+            if (!canStartTherapy()) return;
             isPaused = false;
             updateStatusUI();
             
@@ -1579,21 +1936,25 @@
             const icon = document.getElementById('playIcon');
             const label = document.getElementById('playLabel');
             const secondary = document.getElementById('secondaryButtons');
+
+            const arduinoReady = arduinoConnected;
             
             if (!isActive) {
                 badge.className = 'badge inactive';
                 badge.textContent = 'INACTIVA';
                 btn.className = 'btn-main play';
                 icon.textContent = '▶️';
-                label.textContent = 'Iniciar';
+                label.textContent = arduinoReady ? 'Iniciar' : 'Conecta Arduino';
                 secondary.classList.add('hidden');
+                btn.disabled = !arduinoReady;
             } else if (isPaused) {
                 badge.className = 'badge inactive';
                 badge.textContent = 'PAUSADA';
                 btn.className = 'btn-main play';
                 icon.textContent = '▶️';
-                label.textContent = 'Reanudar';
+                label.textContent = arduinoReady ? 'Reanudar' : 'Conecta Arduino';
                 secondary.classList.remove('hidden');
+                btn.disabled = !arduinoReady;
             } else {
                 badge.className = 'badge active';
                 badge.textContent = 'ACTIVA';
@@ -1601,6 +1962,7 @@
                 icon.textContent = '⏸️';
                 label.textContent = 'Pausar';
                 secondary.classList.remove('hidden');
+                btn.disabled = false;
             }
         }
         
@@ -1643,6 +2005,16 @@
             document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
             elapsedLabel.textContent = formatTime(elapsedSeconds);
             totalLabel.textContent = formatTime(effectiveTotal);
+
+            // Playback slider
+            if (timeTotalLabel) timeTotalLabel.textContent = formatTime(effectiveTotal);
+            if (timeCurrentLabel && !isSeeking) timeCurrentLabel.textContent = formatTime(elapsedSeconds);
+            if (timeSlider && !isSeeking) {
+                timeSlider.max = String(effectiveTotal);
+                timeSlider.value = String(Math.min(effectiveTotal, Math.max(0, elapsedSeconds)));
+            }
+            const percentEl = document.getElementById('playbackPercent');
+            if (percentEl) percentEl.textContent = Math.round(progress) + '%';
             
             // Warning colors
             if (remaining <= 10) {
@@ -1655,6 +2027,31 @@
             
             // Update video preview timer (for video-only mode)
             updateVideoPreviewTimer();
+        }
+
+        function seekTo(seconds) {
+            const effectiveTotal = Math.min(totalSeconds, maxAllowedSeconds);
+            const next = Math.min(effectiveTotal, Math.max(0, Math.floor(seconds)));
+            elapsedSeconds = next;
+
+            if (audioPlayer.src) {
+                try { audioPlayer.currentTime = next; } catch (_) {}
+            }
+            if (videoPlayer.src) {
+                try { videoPlayer.currentTime = next; } catch (_) {}
+            }
+
+            const videoPreview = document.getElementById('videoPreview');
+            if (videoPreview && videoPreview.src) {
+                try { videoPreview.currentTime = next; } catch (_) {}
+            }
+
+            updateTimerDisplay();
+            SessionChannel.Controller.syncTimer(elapsedSeconds, totalSeconds, !isPaused);
+        }
+
+        function shiftPlayback(deltaSeconds) {
+            seekTo(elapsedSeconds + deltaSeconds);
         }
         
         function formatTime(seconds) {
@@ -1901,17 +2298,36 @@
         function setupArduinoListeners() {
             if (!ArduinoSerial.isSupported()) {
                 document.getElementById('btnArduino').style.display = 'none';
+                document.getElementById('btnArduinoMain').style.display = 'none';
                 return;
             }
             
             ArduinoSerial.on('stateChange', (state) => {
                 arduinoConnected = state === 'connected';
                 document.getElementById('btnArduino').classList.toggle('connected', arduinoConnected);
+                // Update main Arduino button
+                const btnMain = document.getElementById('btnArduinoMain');
+                const label = document.getElementById('arduinoLabel');
+                if (btnMain) {
+                    btnMain.classList.toggle('connected', arduinoConnected);
+                    if (label) {
+                        label.textContent = arduinoConnected ? '✅ Arduino Conectado' : '🔌 Conectar Arduino';
+                    }
+                }
+                updateStatusUI();
             });
             
             ArduinoSerial.on('disconnect', () => {
                 arduinoConnected = false;
                 document.getElementById('btnArduino').classList.remove('connected');
+                // Update main Arduino button
+                const btnMain = document.getElementById('btnArduinoMain');
+                const label = document.getElementById('arduinoLabel');
+                if (btnMain) {
+                    btnMain.classList.remove('connected');
+                    if (label) label.textContent = '🔌 Conectar Arduino';
+                }
+                updateStatusUI();
             });
         }
         
@@ -2083,6 +2499,20 @@
                 document.getElementById('volumeValue').textContent = vol + '%';
                 updateVolumeIcon(parseInt(vol));
             });
+
+            // Playback seek
+            if (timeSlider) {
+                timeSlider.addEventListener('input', () => {
+                    isSeeking = true;
+                    const target = parseInt(timeSlider.value || '0');
+                    if (timeCurrentLabel) timeCurrentLabel.textContent = formatTime(target);
+                });
+                timeSlider.addEventListener('change', () => {
+                    const target = parseInt(timeSlider.value || '0');
+                    seekTo(target);
+                    isSeeking = false;
+                });
+            }
             
             // Intensity
             intensitySlider.addEventListener('input', async () => {
