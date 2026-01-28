@@ -2,7 +2,29 @@
 
 ## 🚀 Inicio Rápido
 
+
 ### Requerimientos del Sistema
+#### Requisitos adicionales para Windows
+
+Si usas Windows, antes de instalar las dependencias de Python, asegúrate de tener:
+
+1. **Visual C++ Build Tools**
+   - Descarga e instala desde: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   - Durante la instalación, selecciona **"Desarrollo de escritorio con C++"**.
+   - Reinicia tu terminal después de instalar.
+
+2. **Rust y Cargo**
+   - Descarga e instala desde: https://rustup.rs/
+   - Sigue las instrucciones y reinicia tu terminal.
+
+3. **Verifica la instalación:**
+   ```powershell
+   rustc --version
+   cargo --version
+   ```
+   Si alguno de estos comandos falla, revisa la instalación.
+
+> Estos requisitos son necesarios para compilar extensiones nativas de algunos paquetes de Python (como pydantic-core). Si no los tienes, la instalación de dependencias puede fallar con errores sobre 'link.exe', Visual Studio, Rust o Cargo.
 
 **Software requerido:**
 - **Python 3.9+** (para el backend FastAPI)
@@ -22,22 +44,90 @@ cd /ruta/deseada
 # Asumiendo que ya tienes el código en /Users/keaf/Downloads/panel-kryon
 ```
 
+
 #### 2. Configurar el Backend
 
 **a) Crear entorno virtual:**
 
+**En macOS/Linux:**
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # En macOS/Linux
-# venv\Scripts\activate   # En Windows
+source venv/bin/activate
 ```
+
+**En Windows:**
+
+1. Abre una terminal en la carpeta `backend`:
+    ```powershell
+    cd backend
+    python -m venv venv
+    ```
+
+2. Activa el entorno virtual según tu terminal:
+    - **PowerShell:**
+       ```powershell
+       . .\venv\Scripts\Activate.ps1
+       ```
+    - **CMD (símbolo del sistema):**
+       ```cmd
+       venv\Scripts\activate.bat
+       ```
+
+> Si ves un error de permisos en PowerShell, ejecuta una vez:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+Luego, continúa con la instalación de dependencias.
 
 **b) Instalar dependencias:**
 
+**En macOS/Linux:**
 ```bash
 pip install -r requirements.txt
 ```
+
+**En Windows:**
+```powershell
+python -m pip install -r requirements.txt
+```
+
+**⚠️ Si ves un error como 'link.exe not found', 'error: linker `link.exe` not found', o te pide Visual Studio/Build Tools al instalar dependencias en Windows:**
+
+Algunos paquetes de Python (como pydantic-core) requieren compilar extensiones nativas y necesitan el compilador de C++ de Microsoft (link.exe) instalado y en el PATH.
+
+**Solución:**
+
+1. Descarga e instala los Build Tools de Visual Studio desde:
+   https://visualstudio.microsoft.com/visual-cpp-build-tools/
+2. Durante la instalación, selecciona **"Desarrollo de escritorio con C++"**.
+3. Reinicia tu terminal después de instalar.
+4. Vuelve a instalar las dependencias:
+   ```powershell
+   python -m pip install -r requirements.txt
+   ```
+
+Esto es necesario solo si ves errores de compilación relacionados con 'link.exe', Visual Studio, o mensajes que mencionan el compilador de C++.
+
+**⚠️ Si ves un error relacionado con Rust/Cargo o pydantic-core al instalar dependencias en Windows:**
+
+Algunos paquetes de Python (como pydantic-core) requieren compilar extensiones nativas y necesitan que Rust y Cargo estén instalados y en el PATH.
+
+**Solución:**
+
+1. Instala Rust y Cargo desde https://rustup.rs/ (descarga y ejecuta el instalador para Windows, sigue las instrucciones y reinicia la terminal).
+2. Verifica la instalación:
+   ```powershell
+   rustc --version
+   cargo --version
+   ```
+3. Luego vuelve a instalar las dependencias:
+   ```powershell
+   python -m pip install -r requirements.txt
+   ```
+
+Esto es necesario solo si ves errores de compilación relacionados con pydantic-core, maturin, o mensajes que mencionan Rust/Cargo.
 
 **c) Configurar variables de entorno:**
 
@@ -65,6 +155,20 @@ INITIAL_SUPERADMIN_NAME=Super Admin
 ```
 
 > **⚠️ Importante:** En producción, cambia `SECRET_KEY` y las credenciales del superadmin.
+
+**d) Resetear la base de datos (opcional):**
+
+Para formatear la base de datos y volver a ejecutar el seed inicial:
+
+```bash
+cd backend
+source venv/bin/activate
+python reset_db.py
+```
+
+El script eliminará todas las tablas, las recreará y ejecutará el seed inicial (plan básico, superadmin, modos de luz, categorías). 
+
+> **⚠️ Advertencia:** Este comando borra todos los datos existentes. Úsalo solo en desarrollo.
 
 #### 3. Iniciar el Backend
 
