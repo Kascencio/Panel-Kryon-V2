@@ -15,6 +15,25 @@
 
 ### Instalación y Configuración
 
+**⚠️ Si ves un error relacionado con Rust/Cargo o pydantic-core al instalar dependencias en Windows:**
+
+Algunos paquetes de Python (como pydantic-core) requieren compilar extensiones nativas y necesitan que Rust y Cargo estén instalados y en el PATH.
+
+**Solución:**
+
+1. Instala Rust y Cargo desde https://rustup.rs/ (descarga y ejecuta el instalador para Windows, sigue las instrucciones y reinicia la terminal).
+2. Verifica la instalación:
+   ```powershell
+   rustc --version
+   cargo --version
+   ```
+3. Luego vuelve a instalar las dependencias:
+   ```powershell
+   python -m pip install -r requirements.txt
+   ```
+
+Esto es necesario solo si ves errores de compilación relacionados con pydantic-core, maturin, o mensajes que mencionan Rust/Cargo.
+
 #### 1. Clonar o descargar el repositorio
 
 ```bash
@@ -24,19 +43,52 @@ cd /ruta/deseada
 
 #### 2. Configurar el Backend
 
+
 **a) Crear entorno virtual:**
 
+**En macOS/Linux:**
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # En macOS/Linux
-# venv\Scripts\activate   # En Windows
+source venv/bin/activate
 ```
+
+**En Windows:**
+
+1. Abre una terminal en la carpeta `backend`:
+    ```powershell
+    cd backend
+    python -m venv venv
+    ```
+
+2. Activa el entorno virtual según tu terminal:
+    - **PowerShell:**
+       ```powershell
+       . .\venv\Scripts\Activate.ps1
+       ```
+    - **CMD (símbolo del sistema):**
+       ```cmd
+       venv\Scripts\activate.bat
+       ```
+
+> Si ves un error de permisos en PowerShell, ejecuta una vez:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+Luego, continúa con la instalación de dependencias.
 
 **b) Instalar dependencias:**
 
+
+**En macOS/Linux:**
 ```bash
 pip install -r requirements.txt
+```
+
+**En Windows:**
+```powershell
+python -m pip install -r requirements.txt
 ```
 
 **c) Configurar variables de entorno:**
