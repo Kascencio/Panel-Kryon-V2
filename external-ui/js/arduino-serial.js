@@ -20,6 +20,11 @@ const ArduinoSerial = (() => {
     let writer = null;
     let readLoopRunning = false;
     let connectionState = 'disconnected'; // disconnected, connecting, connected, error
+    let lastSentIntensity = -1; // Track last sent value to avoid duplicates
+    let intensityDebounceTimer = null;
+    
+    // Storage key for remembered device
+    const STORAGE_KEY = 'arduino_device_info';
     
     const listeners = {
         connect: [],
@@ -68,6 +73,122 @@ const ArduinoSerial = (() => {
     // ─────────────────────────────────────────────────────
     // Connection
     // ─────────────────────────────────────────────────────
+    
+    /**
+     * Guardar info del dispositivo para auto-reconexión
+     */
+    function saveDeviceInfo(portInfo) {
+        try {
+            const info = portInfo.getInfo ? portInfo.getInfo() : {};
+            if (info.usbVendorId) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    usbVendorId: info.usbVendorId,
+                    usbProductId: info.usbProductId,
+                    savedAt: Date.now()
+                }));
+                console.log('Dispositivo Arduino guardado para auto-reconexión');
+            }
+        } catch (e) {
+            console.warn('No se pudo guardar info del dispositivo:', e);
+        }
+    }
+    
+    /**
+     * Obtener info del dispositivo guardado
+     */
+    function getSavedDeviceInfo() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Olvidar dispositivo guardado
+     */
+    function forgetDevice() {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('Dispositivo Arduino olvidado');
+    }
+    
+    /**
+     * Intentar auto-reconexión con dispositivo guardado
+     */
+    async function autoConnect() {
+        if (!isSupported()) return false;
+        if (port) return true; // Ya conectado
+        
+        try {
+            // Obtener puertos ya autorizados
+            const ports = await navigator.serial.getPorts();
+            if (ports.length === 0) return false;
+            
+            const savedInfo = getSavedDeviceInfo();
+            
+            // Buscar el puerto guardado o usar el primero disponible
+            let targetPort = null;
+            
+            if (savedInfo) {
+                targetPort = ports.find(p => {
+                    const info = p.getInfo ? p.getInfo() : {};
+                    return info.usbVendorId === savedInfo.usbVendorId &&
+                           info.usbProductId === savedInfo.usbProductId;
+                });
+            }
+            
+            // Si no encontramos el guardado, usar el primero
+            if (!targetPort && ports.length > 0) {
+                targetPort = ports[0];
+            }
+            
+            if (!targetPort) return false;
+            
+            setState('connecting');
+            port = targetPort;
+            
+            // Abrir puerto
+            await port.open({
+                baudRate: 115200,
+                dataBits: 8,
+                stopBits: 1,
+                parity: 'none',
+                flowControl: 'none',
+            });
+            
+            // Setup streams
+            const textEncoder = new TextEncoderStream();
+            const textDecoder = new TextDecoderStream();
+            
+            textEncoder.readable.pipeTo(port.writable);
+            port.readable.pipeTo(textDecoder.writable);
+            
+            writer = textEncoder.writable.getWriter();
+            reader = textDecoder.readable.getReader();
+            
+            // Start read loop
+            startReadLoop();
+            
+            // Guardar info del dispositivo
+            saveDeviceInfo(port);
+            
+            setState('connected');
+            emit('connect', { port, auto: true });
+            
+            console.log('Arduino auto-conectado');
+            return true;
+            
+        } catch (error) {
+            console.log('Auto-conexión falló:', error.message);
+            port = null;
+            reader = null;
+            writer = null;
+            setState('disconnected');
+            return false;
+        }
+    }
+    
     async function connect(options = {}) {
         if (!isSupported()) {
             throw new Error('Web Serial API no soportada en este navegador');
@@ -112,6 +233,9 @@ const ArduinoSerial = (() => {
             
             // Start read loop
             startReadLoop();
+            
+            // Guardar info del dispositivo para auto-reconexión futura
+            saveDeviceInfo(port);
             
             setState('connected');
             emit('connect', { port });
@@ -263,10 +387,52 @@ const ArduinoSerial = (() => {
     
     /**
      * Establecer intensidad/brillo (0-100%)
+     * Con debounce para evitar saturar el serial
      */
-    async function setBrightness(value) {
-        const brightness = Math.max(0, Math.min(100, parseInt(value)));
-        return send(`intensidad:${brightness}`);
+    async function setBrightness(value, immediate = false) {
+        const brightness = Math.max(0, Math.min(100, Math.round(Number(value))));
+        
+        // Si es el mismo valor que ya enviamos, no reenviar (excepto extremos)
+        if (brightness === lastSentIntensity && brightness !== 0 && brightness !== 100) {
+            return true;
+        }
+        
+        // Clear pending debounce
+        if (intensityDebounceTimer) {
+            clearTimeout(intensityDebounceTimer);
+            intensityDebounceTimer = null;
+        }
+        
+        // Para valores extremos (0 o 100) o immediate, enviar inmediatamente
+        if (immediate || brightness === 0 || brightness === 100) {
+            lastSentIntensity = brightness;
+            currentIntensity = brightness;
+            console.log(`[Arduino] Enviando intensidad: ${brightness}% (inmediato)`);
+            return send(`intensidad:${brightness}`);
+        }
+        
+        // Para otros valores, debounce de 50ms para evitar saturar
+        return new Promise((resolve) => {
+            intensityDebounceTimer = setTimeout(async () => {
+                lastSentIntensity = brightness;
+                currentIntensity = brightness;
+                console.log(`[Arduino] Enviando intensidad: ${brightness}%`);
+                try {
+                    await send(`intensidad:${brightness}`);
+                    resolve(true);
+                } catch (e) {
+                    resolve(false);
+                }
+            }, 50);
+        });
+    }
+    
+    /**
+     * Enviar intensidad inmediatamente sin debounce
+     * Útil para cuando sueltas el slider
+     */
+    async function setBrightnessImmediate(value) {
+        return setBrightness(value, true);
     }
     
     /**
@@ -426,8 +592,13 @@ const ArduinoSerial = (() => {
         // Connection
         connect,
         disconnect,
+        autoConnect,
         isConnected,
         getState,
+        
+        // Device memory
+        getSavedDeviceInfo,
+        forgetDevice,
         
         // Events
         on,
@@ -439,6 +610,7 @@ const ArduinoSerial = (() => {
         // ESP32 Commands
         startMode,
         setBrightness,
+        setBrightnessImmediate,
         stop,
         complete,
         selfTest,

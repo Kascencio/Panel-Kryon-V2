@@ -66,6 +66,20 @@ INITIAL_SUPERADMIN_NAME=Super Admin
 
 > **⚠️ Importante:** En producción, cambia `SECRET_KEY` y las credenciales del superadmin.
 
+**d) Resetear la base de datos (opcional):**
+
+Para formatear la base de datos y volver a ejecutar el seed inicial:
+
+```bash
+cd backend
+source venv/bin/activate
+python reset_db.py
+```
+
+El script eliminará todas las tablas, las recreará y ejecutará el seed inicial (plan básico, superadmin, modos de luz, categorías). 
+
+> **⚠️ Advertencia:** Este comando borra todos los datos existentes. Úsalo solo en desarrollo.
+
 #### 3. Iniciar el Backend
 
 **Opción A: Usando el script de inicio (recomendado):**

@@ -2329,8 +2329,22 @@
                 }
                 updateStatusUI();
             });
+            
+            // Intentar auto-conexión con dispositivo guardado
+            tryAutoConnectArduino();
         }
         
+        async function tryAutoConnectArduino() {
+            const savedDevice = ArduinoSerial.getSavedDeviceInfo();
+            if (savedDevice && !arduinoConnected) {
+                console.log('[Session] Intentando auto-conexión Arduino...');
+                const connected = await ArduinoSerial.autoConnect();
+                if (connected) {
+                    console.log('[Session] Arduino auto-conectado');
+                }
+            }
+        }
+
         async function toggleArduinoPanel() {
             if (!arduinoConnected) {
                 try {
@@ -2514,12 +2528,21 @@
                 });
             }
             
-            // Intensity
+            // Intensity - con fix para valores extremos (0 y 100)
             intensitySlider.addEventListener('input', async () => {
-                const val = intensitySlider.value;
+                const val = parseInt(intensitySlider.value);
                 document.getElementById('intensityValue').textContent = val + '%';
                 if (arduinoConnected && isActive) {
+                    // Usar setBrightness con debounce para valores intermedios
                     await ArduinoSerial.setBrightness(val);
+                }
+            });
+            
+            // Cuando sueltas el slider, enviar inmediatamente para asegurar el valor final
+            intensitySlider.addEventListener('change', async () => {
+                const val = parseInt(intensitySlider.value);
+                if (arduinoConnected && isActive) {
+                    await ArduinoSerial.setBrightnessImmediate(val);
                 }
             });
             

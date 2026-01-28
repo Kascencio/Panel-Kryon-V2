@@ -402,6 +402,44 @@
             .container { padding: 1rem; }
             .therapy-grid { grid-template-columns: 1fr; }
             .btn-group { flex-direction: column; }
+            .arduino-btn .arduino-status-text { display: none; }
+        }
+
+        /* Arduino Button Styles */
+        .arduino-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .arduino-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .arduino-btn.connecting {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: rgba(251, 191, 36, 0.4);
+            color: #fbbf24;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .arduino-btn.connected {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #22c55e;
+        }
+
+        .arduino-btn.connected:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
     </style>
 </head>
@@ -424,6 +462,11 @@
                 </div>
             </div>
             <div class="user-info">
+                <!-- Arduino Connection Button -->
+                <button class="btn arduino-btn" id="arduinoBtn" onclick="toggleArduinoConnection()" title="Conectar Arduino/ESP32">
+                    <span id="arduinoIcon">🔌</span>
+                    <span id="arduinoStatus">Desconectado</span>
+                </button>
                 <div class="credits-badge" id="creditsBadge">
                     💎 <span id="creditsCount">0</span> créditos
                 </div>
@@ -592,9 +635,10 @@
                         <span>🔆 Intensidad Inicial</span>
                         <span id="intensityValue" style="color: #e2e8f0;">50%</span>
                     </label>
-                    <input type="range" id="intensitySlider" min="0" max="100" value="50" 
+                    <input type="range" id="intensitySlider" min="0" max="100" value="50" step="1"
                            style="width: 100%; accent-color: #6366f1;"
-                           oninput="updateIntensityValue()">
+                           oninput="updateIntensityValue()"
+                           onchange="sendIntensityToArduino(true)">
                 </div>
                 
                 <!-- Video Option -->
@@ -804,6 +848,7 @@
     </style>
 
     <script src="./js/api.js?v=20260126"></script>
+    <script src="./js/arduino-serial.js?v=20260127"></script>
     <script>
         // ─────────────────────────────────────────────────────
         // State
@@ -826,6 +871,91 @@
         let lastFocusedElement = null;
 
         // ─────────────────────────────────────────────────────
+        // Arduino Connection
+        // ─────────────────────────────────────────────────────
+        function updateArduinoUI(state) {
+            const btn = document.getElementById('arduinoBtn');
+            const icon = document.getElementById('arduinoIcon');
+            const status = document.getElementById('arduinoStatus');
+            
+            if (!btn) return;
+            
+            btn.classList.remove('connected', 'connecting');
+            
+            switch (state) {
+                case 'connected':
+                    btn.classList.add('connected');
+                    icon.textContent = '✅';
+                    status.textContent = 'Conectado';
+                    btn.title = 'Arduino conectado - Click para desconectar';
+                    break;
+                case 'connecting':
+                    btn.classList.add('connecting');
+                    icon.textContent = '⏳';
+                    status.textContent = 'Conectando...';
+                    btn.title = 'Conectando...';
+                    break;
+                case 'disconnected':
+                default:
+                    icon.textContent = '🔌';
+                    status.textContent = 'Desconectado';
+                    btn.title = 'Click para conectar Arduino/ESP32';
+                    break;
+            }
+        }
+        
+        async function toggleArduinoConnection() {
+            if (!ArduinoSerial.isSupported()) {
+                alert('Tu navegador no soporta Web Serial API.\nUsa Chrome, Edge o Opera.');
+                return;
+            }
+            
+            if (ArduinoSerial.isConnected()) {
+                // Desconectar
+                await ArduinoSerial.disconnect();
+            } else {
+                // Conectar (mostrará el selector de puertos)
+                try {
+                    await ArduinoSerial.connect();
+                } catch (e) {
+                    console.error('Error conectando Arduino:', e);
+                    alert('Error al conectar: ' + e.message);
+                }
+            }
+        }
+        
+        async function initArduino() {
+            if (!ArduinoSerial.isSupported()) {
+                console.log('Web Serial API no soportada');
+                const btn = document.getElementById('arduinoBtn');
+                if (btn) {
+                    btn.style.display = 'none';
+                }
+                return;
+            }
+            
+            // Escuchar cambios de estado
+            ArduinoSerial.on('stateChange', updateArduinoUI);
+            ArduinoSerial.on('connect', (data) => {
+                console.log('Arduino conectado', data.auto ? '(auto)' : '');
+            });
+            ArduinoSerial.on('disconnect', () => {
+                console.log('Arduino desconectado');
+            });
+            
+            // Intentar auto-conexión con dispositivo guardado
+            const savedDevice = ArduinoSerial.getSavedDeviceInfo();
+            if (savedDevice) {
+                console.log('Dispositivo guardado encontrado, intentando auto-conexión...');
+                updateArduinoUI('connecting');
+                const connected = await ArduinoSerial.autoConnect();
+                if (!connected) {
+                    updateArduinoUI('disconnected');
+                }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────
         // Init
         // ─────────────────────────────────────────────────────
         async function init() {
@@ -837,6 +967,9 @@
                 user = await KryonAPI.getProfile();
                 updateCreditsDisplay();
                 updatePlanDisplay();
+                
+                // Inicializar Arduino en paralelo
+                initArduino();
                 
                 await Promise.all([
                     loadTherapies(),
@@ -1274,6 +1407,25 @@
             const slider = document.getElementById('intensitySlider');
             customIntensity = parseInt(slider.value);
             document.getElementById('intensityValue').textContent = customIntensity + '%';
+            
+            // Enviar al Arduino en tiempo real (con debounce interno)
+            sendIntensityToArduino(false);
+        }
+        
+        async function sendIntensityToArduino(immediate = false) {
+            if (!ArduinoSerial.isConnected()) return;
+            
+            try {
+                if (immediate) {
+                    // Cuando sueltas el slider, enviar inmediatamente
+                    await ArduinoSerial.setBrightnessImmediate(customIntensity);
+                } else {
+                    // Mientras arrastras, usa debounce
+                    await ArduinoSerial.setBrightness(customIntensity);
+                }
+            } catch (e) {
+                console.warn('Error enviando intensidad:', e);
+            }
         }
         
         function updatePreview() {
