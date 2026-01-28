@@ -3,6 +3,27 @@
 ## 🚀 Inicio Rápido
 
 ### Requerimientos del Sistema
+#### Requisitos adicionales para Windows
+
+Si usas Windows, antes de instalar las dependencias de Python, asegúrate de tener:
+
+1. **Visual C++ Build Tools**
+   - Descarga e instala desde: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   - Durante la instalación, selecciona **"Desarrollo de escritorio con C++"**.
+   - Reinicia tu terminal después de instalar.
+
+2. **Rust y Cargo**
+   - Descarga e instala desde: https://rustup.rs/
+   - Sigue las instrucciones y reinicia tu terminal.
+
+3. **Verifica la instalación:**
+   ```powershell
+   rustc --version
+   cargo --version
+   ```
+   Si alguno de estos comandos falla, revisa la instalación.
+
+> Estos requisitos son necesarios para compilar extensiones nativas de algunos paquetes de Python (como pydantic-core). Si no los tienes, la instalación de dependencias puede fallar con errores sobre 'link.exe', Visual Studio, Rust o Cargo.
 
 **Software requerido:**
 - **Python 3.9+** (para el backend FastAPI)
@@ -14,6 +35,22 @@
 - 500MB de espacio libre en disco (para code + media)
 
 ### Instalación y Configuración
+**⚠️ Si ves un error como 'link.exe not found', 'error: linker `link.exe` not found', o te pide Visual Studio/Build Tools al instalar dependencias en Windows:**
+
+Algunos paquetes de Python (como pydantic-core) requieren compilar extensiones nativas y necesitan el compilador de C++ de Microsoft (link.exe) instalado y en el PATH.
+
+**Solución:**
+
+1. Descarga e instala los Build Tools de Visual Studio desde:
+   https://visualstudio.microsoft.com/visual-cpp-build-tools/
+2. Durante la instalación, selecciona **"Desarrollo de escritorio con C++"**.
+3. Reinicia tu terminal después de instalar.
+4. Vuelve a instalar las dependencias:
+   ```powershell
+   python -m pip install -r requirements.txt
+   ```
+
+Esto es necesario solo si ves errores de compilación relacionados con 'link.exe', Visual Studio, o mensajes que mencionan el compilador de C++.
 
 **⚠️ Si ves un error relacionado con Rust/Cargo o pydantic-core al instalar dependencias en Windows:**
 
