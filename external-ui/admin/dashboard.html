@@ -1666,6 +1666,32 @@
                            style="width: 100%;">
                 </div>
                 
+                <!-- Duración predeterminada (Formato MM:SS) -->
+                <div class="form-group">
+                    <label>Duración predeterminada * <small style="color: #64748b;">(MM:SS)</small></label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                        <input type="number" name="edit_duration_min" id="editDurationMin" 
+                               min="0" max="180" value="15" 
+                               style="width: 80px; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;"
+                               placeholder="Min">
+                        <span style="color: #a855f7; font-size: 1.5rem; font-weight: bold;">:</span>
+                        <input type="number" name="edit_duration_sec" id="editDurationSec" 
+                               min="0" max="59" value="0" 
+                               style="width: 80px; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;"
+                               placeholder="Seg">
+                        <span id="editDurationPreview" style="color: #64748b; font-size: 0.9rem; margin-left: 0.5rem;">= 15:00</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                        <button type="button" onclick="setEditDuration(5, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">5:00</button>
+                        <button type="button" onclick="setEditDuration(5, 30)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">5:30</button>
+                        <button type="button" onclick="setEditDuration(10, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">10:00</button>
+                        <button type="button" onclick="setEditDuration(15, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">15:00</button>
+                        <button type="button" onclick="setEditDuration(20, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">20:00</button>
+                        <button type="button" onclick="setEditDuration(30, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">30:00</button>
+                    </div>
+                    <small class="help-text" style="margin-top: 0.5rem; display: block;">Esta es la duración que se usará por defecto al iniciar la terapia con "▶️ Iniciar"</small>
+                </div>
+                
                 <!-- Duraciones por tipo -->
                 <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
                     <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">⏱️ Límites de tiempo por tipo</h4>
@@ -2452,6 +2478,18 @@
             document.getElementById('createDurationPreview').textContent = 
                 `= ${displayMin}:${String(displaySec).padStart(2, '0')} (${totalSec}s)`;
         }
+        
+        // Helper function for edit form duration presets
+        function setEditDuration(min, sec) {
+            document.getElementById('editDurationMin').value = min;
+            document.getElementById('editDurationSec').value = sec;
+            // Trigger preview update
+            const totalSec = (min * 60) + sec;
+            const displayMin = Math.floor(totalSec / 60);
+            const displaySec = totalSec % 60;
+            document.getElementById('editDurationPreview').textContent = 
+                `= ${displayMin}:${String(displaySec).padStart(2, '0')} (${totalSec}s)`;
+        }
 
         function openCreditsModal(userId) {
             document.getElementById('creditsUserId').value = userId;
@@ -2634,13 +2672,18 @@
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<span class="loading-spinner"></span> Guardando...';
             }
+            
+            // Calculate default_duration_sec from MM:SS inputs
+            const editDurationMin = parseInt(document.getElementById('editDurationMin')?.value) || 0;
+            const editDurationSec = parseInt(document.getElementById('editDurationSec')?.value) || 0;
+            const defaultDurationSec = (editDurationMin * 60) + editDurationSec;
 
             const data = {
                 name: form.name.value,
                 description: form.description.value || null,
                 category: form.category.value || null,
                 access_level: form.access_level?.value || 'basic',
-                default_duration_sec: parseInt(form.duration_corto_min.value) * 60,
+                default_duration_sec: defaultDurationSec > 0 ? defaultDurationSec : parseInt(form.duration_corto_min.value) * 60,
                 color_mode: form.color_mode.value,
                 default_intensity: parseInt(form.default_intensity.value),
                 media_type: form.media_type?.value || null,
@@ -2856,10 +2899,19 @@
                 document.getElementById('editTherapyIntensity').value = intensity;
                 document.getElementById('editIntensityValue').textContent = intensity;
                 
-                // Duraciones
+                // Duraciones (límites por tipo)
                 document.getElementById('editDurationCorto').value = Math.floor((therapy.duration_corto_sec || 300) / 60);
                 document.getElementById('editDurationMediano').value = Math.floor((therapy.duration_mediano_sec || 1200) / 60);
                 document.getElementById('editDurationLargo').value = Math.floor((therapy.duration_largo_sec || 10800) / 60);
+                
+                // Duración predeterminada en formato MM:SS
+                const defaultDurationSec = therapy.default_duration_sec || 900;
+                const editMins = Math.floor(defaultDurationSec / 60);
+                const editSecs = defaultDurationSec % 60;
+                document.getElementById('editDurationMin').value = editMins;
+                document.getElementById('editDurationSec').value = editSecs;
+                document.getElementById('editDurationPreview').textContent = 
+                    `= ${editMins}:${String(editSecs).padStart(2, '0')} (${defaultDurationSec}s)`;
                 
                 // Etiquetas
                 document.getElementById('editDurationLabels').value = therapy.duration_labels || '';
@@ -3063,21 +3115,90 @@
             loadTherapies();
         }
         
-        // Preview duración del audio antes de subir
+        // Preview duración del audio antes de subir - MEJORADO con reproductor y recomendación
         function previewAudioDuration(input, type) {
             const file = input.files[0];
             if (!file) return;
             
+            const containerSelector = `uploadAudio${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            const durationEl = document.getElementById(`${containerSelector}Duration`);
+            const statusEl = document.getElementById(`${containerSelector}Status`);
+            
+            // Show loading
+            if (statusEl) statusEl.textContent = '⏳';
+            if (durationEl) durationEl.textContent = 'Analizando...';
+            
+            // Create audio element
             const audio = new Audio();
             audio.src = URL.createObjectURL(file);
+            
             audio.onloadedmetadata = () => {
                 const duration = Math.round(audio.duration);
                 const mins = Math.floor(duration / 60);
                 const secs = duration % 60;
-                document.getElementById(`uploadAudio${type.charAt(0).toUpperCase() + type.slice(1)}Duration`).textContent = 
-                    `${mins}:${secs.toString().padStart(2, '0')}`;
-                URL.revokeObjectURL(audio.src);
+                const formatted = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                // Update status and duration display
+                if (statusEl) statusEl.textContent = '✅';
+                if (durationEl) {
+                    durationEl.innerHTML = `
+                        <span style="color: #22c55e;">${formatted}</span>
+                        <button type="button" onclick="useRecommendedDuration(${mins}, ${secs})" 
+                                style="margin-left: 0.5rem; padding: 0.2rem 0.5rem; background: #a855f7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                            📋 Usar
+                        </button>
+                    `;
+                }
+                
+                // Create audio player preview if not exists
+                let previewContainer = input.parentElement.querySelector('.audio-preview-player');
+                if (!previewContainer) {
+                    previewContainer = document.createElement('div');
+                    previewContainer.className = 'audio-preview-player';
+                    previewContainer.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem; background: rgba(168, 85, 247, 0.1); border-radius: 6px;';
+                    input.parentElement.appendChild(previewContainer);
+                }
+                
+                previewContainer.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <audio controls src="${audio.src}" style="height: 32px; flex: 1;"></audio>
+                        <span style="font-size: 0.7rem; color: #a855f7; white-space: nowrap;">
+                            ${file.name.slice(0, 20)}${file.name.length > 20 ? '...' : ''}
+                        </span>
+                    </div>
+                    <div style="margin-top: 0.5rem; padding: 0.4rem; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 4px;">
+                        <span style="font-size: 0.75rem; color: #22c55e;">
+                            💡 Duración recomendada: <strong>${formatted}</strong> (${duration} segundos)
+                        </span>
+                    </div>
+                `;
+                
+                console.log(`[Audio ${type}] Duración detectada: ${formatted} (${duration}s)`);
             };
+            
+            audio.onerror = () => {
+                if (statusEl) statusEl.textContent = '❌';
+                if (durationEl) durationEl.textContent = 'Error al leer';
+                console.error('Error al analizar audio');
+            };
+        }
+        
+        // Helper to use recommended duration
+        function useRecommendedDuration(mins, secs) {
+            const minInput = document.getElementById('createDurationMin');
+            const secInput = document.getElementById('createDurationSec');
+            
+            if (minInput && secInput) {
+                minInput.value = mins;
+                secInput.value = secs;
+                // Trigger preview update
+                const totalSec = (mins * 60) + secs;
+                const preview = document.getElementById('createDurationPreview');
+                if (preview) {
+                    preview.textContent = `= ${mins}:${String(secs).padStart(2, '0')} (${totalSec}s)`;
+                }
+                showToast(`Duración establecida a ${mins}:${String(secs).padStart(2, '0')}`, 'success');
+            }
         }
         
         // Preview duración del video
