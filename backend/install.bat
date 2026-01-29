@@ -172,6 +172,19 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+REM Create .env from .env.example if it doesn't exist
+if not exist .env (
+    if exist .env.example (
+        echo    - Creating .env from .env.example...
+        copy .env.example .env >nul
+        echo    - IMPORTANT: Please edit .env with your database credentials!
+    ) else (
+        echo [WARNING] No .env or .env.example found. App may not start correctly.
+    )
+) else (
+    echo    - .env file already exists.
+)
+
 REM Optional: Initialize DB
 if exist reset_db.py (
     echo    - Initializing Database...
