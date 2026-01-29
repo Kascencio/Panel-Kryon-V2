@@ -13,21 +13,14 @@ REM ---------------------------------------------------
 echo.
 echo [1/4] Checking Visual C++ Build Tools...
 
-REM Flag to track if we need to install C++ tools
+set "VS_PATH="
 set "NEED_CPP=1"
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 
-REM Check validation method 1: vswhere (The proper way)
-if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
-    REM Check if VC Tools component is present
-    for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
-        set "NEED_CPP=0"
-    )
-)
-
-REM Check validation method 2: Fallback to checking cl.exe if vswhere is missing but maybe cl is in path
-if "!NEED_CPP!"=="1" (
-    where cl >nul 2>nul
-    if !errorlevel! equ 0 (
+REM Use vswhere to find installation path
+if exist "!VSWHERE!" (
+    for /f "usebackq tokens=*" %%i in (`"!VSWHERE!" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+        set "VS_PATH=%%i"
         set "NEED_CPP=0"
     )
 )
@@ -45,8 +38,15 @@ if "!NEED_CPP!"=="1" (
     
     echo    - Visual C++ Build Tools installation finished.
     if exist vs_buildtools.exe del vs_buildtools.exe
+    
+    REM Try to find the path again after installation
+    if exist "!VSWHERE!" (
+        for /f "usebackq tokens=*" %%i in (`"!VSWHERE!" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+            set "VS_PATH=%%i"
+        )
+    )
 ) else (
-    echo    - Visual C++ Build Tools are already installed.
+    echo    - Visual C++ Build Tools are already installed at: !VS_PATH!
 )
 
 REM ---------------------------------------------------
@@ -70,7 +70,7 @@ if %errorlevel% neq 0 (
     echo    - Rust installed.
     if exist rustup-init.exe del rustup-init.exe
     
-    REM Update PATH for current session
+    REM Update PATH for current session manually since refreshenv doesn't work well in batch
     set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
 ) else (
     echo    - Rust is already installed.
@@ -106,13 +106,14 @@ REM ---------------------------------------------------
 echo.
 echo [4/4] Setting up Project Environment...
 
-REM Check if python is available now
-where python >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [ERROR] Python was installed but is not visible in the current session.
-    echo Please RESTART this script or your computer to finalize the setup.
-    pause
-    exit /b 1
+REM Activate C++ Build Tools Environment if found (Crucial for compiling wheels like pydantic-core)
+if defined VS_PATH (
+    if exist "!VS_PATH!\VC\Auxiliary\Build\vcvars64.bat" (
+        echo    - Initializing Visual C++ Environment...
+        call "!VS_PATH!\VC\Auxiliary\Build\vcvars64.bat" >nul
+    ) else (
+        echo [WARNING] vcvars64.bat not found. Compilation might fail.
+    )
 )
 
 if not exist venv (
