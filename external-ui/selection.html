@@ -1471,10 +1471,17 @@
                 ? KryonAPI.getAudioForDuration(selectedTherapy, customDurationType)
                 : { audioUrl: null };
             
-            // CRITICAL: Use default_duration_sec as the actual duration (not type limits)
-            const actualDuration = selectedTherapy.default_duration_sec || 900;
+            // FIXED: Use the limit of the selected duration type
+            let actualDuration = selectedTherapy.default_duration_sec || 900;
             
-            console.log('[Customized] Using duration:', actualDuration, 'seconds');
+            if (hasAnyAudio) {
+                if (customDurationType === 'corto' && selectedTherapy.duration_corto_sec) actualDuration = selectedTherapy.duration_corto_sec;
+                else if (customDurationType === 'mediano' && selectedTherapy.duration_mediano_sec) actualDuration = selectedTherapy.duration_mediano_sec;
+                else if (customDurationType === 'largo' && selectedTherapy.duration_largo_sec) actualDuration = selectedTherapy.duration_largo_sec;
+            }
+
+            console.log('[Customized] User selected:', customDurationType);
+            console.log('[Customized] Using max duration:', actualDuration, 'seconds');
             
             // Create session config
             const sessionConfig = {

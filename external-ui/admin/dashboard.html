@@ -1365,136 +1365,436 @@
         </div>
     </div>
 
-    <!-- Modal: Create Therapy -->
+    <!-- Modal: Create Therapy (WIZARD) -->
     <div class="modal-overlay" id="modal-createTherapy">
-        <div class="modal" style="max-width: 550px; max-height: 90vh; overflow-y: auto; margin: auto;">
+        <div class="modal" style="max-width: 650px; max-height: 90vh; overflow-y: auto; margin: auto;">
             <div class="modal-header">
-                <h3>Nueva terapia</h3>
+                <h3>🧙‍♂️ Nueva Terapia</h3>
                 <button class="modal-close" onclick="closeModal('createTherapy')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
-            <form id="createTherapyForm">
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" name="name" required placeholder="Ej: Relajación Profunda">
+            
+            <!-- WIZARD STEP INDICATORS -->
+            <div id="wizardSteps" style="display: flex; justify-content: center; gap: 0.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(168, 85, 247, 0.2);">
+                <div class="wizard-step active" id="wizardStep1" onclick="goToWizardStep(1)">
+                    <span class="step-number">1</span>
+                    <span class="step-label">Información</span>
                 </div>
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="description" rows="2" placeholder="Descripción de la terapia"></textarea>
+                <div class="wizard-step-line"></div>
+                <div class="wizard-step" id="wizardStep2" onclick="goToWizardStep(2)">
+                    <span class="step-number">2</span>
+                    <span class="step-label">Subir Audio</span>
                 </div>
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <select name="category" id="createTherapyCategory">
-                        <option value="">Sin categoría</option>
-                        <!-- Se cargan dinámicamente -->
-                    </select>
+                <div class="wizard-step-line"></div>
+                <div class="wizard-step" id="wizardStep3" onclick="goToWizardStep(3)">
+                    <span class="step-number">3</span>
+                    <span class="step-label">Revisar</span>
                 </div>
+            </div>
+            
+            <style>
+                .wizard-step {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.25rem;
+                    cursor: pointer;
+                    opacity: 0.5;
+                    transition: all 0.3s ease;
+                }
+                .wizard-step.active, .wizard-step.completed {
+                    opacity: 1;
+                }
+                .wizard-step .step-number {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: rgba(168, 85, 247, 0.2);
+                    border: 2px solid rgba(168, 85, 247, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    color: #a855f7;
+                    transition: all 0.3s ease;
+                }
+                .wizard-step.active .step-number {
+                    background: #a855f7;
+                    color: white;
+                    border-color: #a855f7;
+                }
+                .wizard-step.completed .step-number {
+                    background: #22c55e;
+                    color: white;
+                    border-color: #22c55e;
+                }
+                .wizard-step .step-label {
+                    font-size: 0.7rem;
+                    color: #94a3b8;
+                }
+                .wizard-step.active .step-label {
+                    color: #a855f7;
+                }
+                .wizard-step-line {
+                    width: 40px;
+                    height: 2px;
+                    background: rgba(168, 85, 247, 0.3);
+                    align-self: center;
+                    margin-top: -1rem;
+                }
+                .wizard-panel {
+                    display: none;
+                    padding: 1.5rem;
+                }
+                .wizard-panel.active {
+                    display: block;
+                    animation: fadeIn 0.3s ease;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .upload-zone {
+                    border: 2px dashed rgba(168, 85, 247, 0.4);
+                    border-radius: 12px;
+                    padding: 2rem;
+                    text-align: center;
+                    background: rgba(168, 85, 247, 0.05);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                .upload-zone:hover {
+                    border-color: #a855f7;
+                    background: rgba(168, 85, 247, 0.1);
+                }
+                .upload-zone.has-file {
+                    border-color: #22c55e;
+                    background: rgba(34, 197, 94, 0.1);
+                }
+                .audio-preview-box {
+                    margin-top: 1rem;
+                    padding: 1rem;
+                    background: rgba(34, 197, 94, 0.1);
+                    border: 1px solid rgba(34, 197, 94, 0.3);
+                    border-radius: 8px;
+                }
+                .review-section {
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 8px;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                }
+                .review-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                }
+                .review-row:last-child {
+                    border-bottom: none;
+                }
+                .review-label {
+                    color: #94a3b8;
+                }
+                .review-value {
+                    color: #e2e8f0;
+                    font-weight: 500;
+                }
+                @media (max-width: 600px) {
+                    .wizard-step .step-label { display: none; }
+                    .wizard-step-line { width: 30px; }
+                }
+            </style>
+            
+            <form id="createTherapyForm" novalidate>
+                <!-- STEP 1: INFO -->
+                <div class="wizard-panel active" id="wizardPanel1">
+                    <h4 style="color: #a855f7; margin-bottom: 1rem;">📝 Información Básica</h4>
+                    
+                    <div class="form-group">
+                        <label>Nombre de la terapia *</label>
+                        <input type="text" name="name" id="wizardName" required placeholder="Ej: Relajación Profunda">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea name="description" id="wizardDescription" rows="2" placeholder="Descripción breve de la terapia"></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Categoría</label>
+                            <select name="category" id="createTherapyCategory">
+                                <option value="">Sin categoría</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Acceso</label>
+                            <select name="access_level" id="createTherapyAccessLevel">
+                                <option value="basic">Básica</option>
+                                <option value="premium">Premium</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Tipo de media -->
+                    <div class="form-group">
+                        <label>Tipo de contenido *</label>
+                        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1; min-width: 100px;">
+                                <input type="radio" name="media_type" value="audio" checked style="accent-color: #a855f7;">
+                                <span>🎵 Audio</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1; min-width: 100px;">
+                                <input type="radio" name="media_type" value="video" style="accent-color: #a855f7;">
+                                <span>🎬 Video</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1; min-width: 100px;">
+                                <input type="radio" name="media_type" value="both" style="accent-color: #a855f7;">
+                                <span>🎵🎬 Ambos</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Modo de luz</label>
+                            <select name="color_mode" id="createTherapyColorMode">
+                                <option value="default">Por defecto</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Intensidad: <span id="createIntensityValue">50</span>%</label>
+                            <input type="range" name="default_intensity" min="0" max="100" value="50" 
+                                   oninput="document.getElementById('createIntensityValue').textContent = this.value"
+                                   style="width: 100%;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- STEP 2: UPLOAD -->
+                <div class="wizard-panel" id="wizardPanel2">
+                    <h4 style="color: #a855f7; margin-bottom: 1rem;">⏱️ Tiempos y Archivos</h4>
+                    
+                    <!-- 1. Duration Limits Config -->
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid rgba(168, 85, 247, 0.2);">
+                        <h5 style="color: #e2e8f0; font-size: 0.9rem; margin-bottom: 0.75rem;">1. Límites de Audio (minutos)</h5>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                            <div>
+                                <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Corto (máx)</label>
+                                <input type="number" name="limit_corto" id="wizardLimitCorto" value="5" min="1" max="100" 
+                                       style="width: 100%; text-align: center; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #fff;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Mediano (máx)</label>
+                                <input type="number" name="limit_mediano" id="wizardLimitMediano" value="20" min="5" max="180" 
+                                       style="width: 100%; text-align: center; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #fff;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Largo (máx)</label>
+                                <input type="number" name="limit_largo" id="wizardLimitLargo" value="180" min="20" max="600" 
+                                       style="width: 100%; text-align: center; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #fff;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. Upload Files -->
+                    <div style="margin-bottom: 1.5rem;">
+                         <h5 style="color: #e2e8f0; font-size: 0.9rem; margin-bottom: 0.75rem;">2. Subir Archivos (Opcional)</h5>
+                         
+                         <style>
+                             .upload-mini-card {
+                                 background: rgba(0,0,0,0.2);
+                                 border: 1px solid rgba(71, 85, 105, 0.5);
+                                 border-radius: 8px;
+                                 padding: 0.75rem;
+                                 margin-bottom: 0.5rem;
+                                 display: flex;
+                                 align-items: center;
+                                 justify-content: space-between;
+                             }
+                             .upload-mini-header {
+                                 display: flex;
+                                 align-items: center;
+                                 gap: 0.75rem;
+                             }
+                             .wizard-file-input {
+                                 font-size: 0.8rem;
+                                 max-width: 180px;
+                             }
+                         </style>
+                         
+                         <!-- Audio Corto -->
+                         <div class="upload-mini-card" id="wizardCardCorto">
+                            <div class="upload-mini-header" style="width: 100%; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="status-icon" id="wizardStatusCorto">🎵</span>
+                                    <span class="label" style="font-size: 0.9rem;">Audio Corto</span>
+                                </div>
+                                <button type="button" id="wizardUseDurationCorto" style="display:none; border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.1); color: #e879f9; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" onclick="useDetectedDuration('corto')">📋 Arrastrar tiempo</button>
+                            </div>
+                            <input type="file" id="wizardFileCorto" accept="audio/*" class="wizard-file-input" onchange="handleWizardAudioUpload('corto', this)">
+                         </div>
+                         <div id="wizardInfoCorto" style="display:none; font-size: 0.75rem; color: #22c55e; margin: -0.25rem 0 0.5rem 0.5rem;"></div>
+                         
+                         <!-- Audio Mediano -->
+                         <div class="upload-mini-card" id="wizardCardMediano">
+                            <div class="upload-mini-header" style="width: 100%; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="status-icon" id="wizardStatusMediano">🎵</span>
+                                    <span class="label" style="font-size: 0.9rem;">Audio Mediano</span>
+                                </div>
+                                <button type="button" id="wizardUseDurationMediano" style="display:none; border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.1); color: #e879f9; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" onclick="useDetectedDuration('mediano')">📋 Arrastrar tiempo</button>
+                            </div>
+                            <input type="file" id="wizardFileMediano" accept="audio/*" class="wizard-file-input" onchange="handleWizardAudioUpload('mediano', this)">
+                         </div>
+                         <div id="wizardInfoMediano" style="display:none; font-size: 0.75rem; color: #22c55e; margin: -0.25rem 0 0.5rem 0.5rem;"></div>
+                         
+                         <!-- Audio Largo -->
+                         <div class="upload-mini-card" id="wizardCardLargo">
+                            <div class="upload-mini-header" style="width: 100%; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="status-icon" id="wizardStatusLargo">🎵</span>
+                                    <span class="label" style="font-size: 0.9rem;">Audio Largo</span>
+                                </div>
+                                <button type="button" id="wizardUseDurationLargo" style="display:none; border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.1); color: #e879f9; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" onclick="useDetectedDuration('largo')">📋 Arrastrar tiempo</button>
+                            </div>
+                            <input type="file" id="wizardFileLargo" accept="audio/*" class="wizard-file-input" onchange="handleWizardAudioUpload('largo', this)">
+                         </div>
+                         <div id="wizardInfoLargo" style="display:none; font-size: 0.75rem; color: #22c55e; margin: -0.25rem 0 0.5rem 0.5rem;"></div>
+                         
+                         <!-- Video -->
+                         <div class="upload-mini-card" id="wizardCardVideo" style="border-style: dashed; border-color: rgba(168, 85, 247, 0.3);">
+                            <div class="upload-mini-header">
+                                <span class="status-icon" id="wizardStatusVideo">🎬</span>
+                                <span class="label" style="font-size: 0.9rem;">Video (Opcional)</span>
+                            </div>
+                            <input type="file" id="wizardFileVideo" accept="video/*" class="wizard-file-input" onchange="handleWizardAudioUpload('video', this)">
+                         </div>
+                         <div id="wizardInfoVideo" style="display:none; font-size: 0.75rem; color: #22c55e; margin: -0.25rem 0 0.5rem 0.5rem;"></div>
+                    </div>
 
-                <div class="form-group">
-                    <label>Acceso</label>
-                    <select name="access_level" id="createTherapyAccessLevel">
-                        <option value="basic">Básica</option>
-                        <option value="premium">Premium</option>
-                    </select>
-                    <small style="color: #64748b; font-size: 0.75rem;">Las premium se muestran bloqueadas para planes básicos</small>
-                </div>
-                
-                <!-- Tipo de reproducción -->
-                <div class="form-group">
-                    <label>Tipo de reproducción *</label>
-                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1;">
-                            <input type="radio" name="media_type" value="audio" checked style="accent-color: #a855f7;">
-                            <span>🎵 Solo Audio</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1;">
-                            <input type="radio" name="media_type" value="video" style="accent-color: #a855f7;">
-                            <span>🎬 Solo Video</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; flex: 1;">
-                            <input type="radio" name="media_type" value="both" style="accent-color: #a855f7;">
-                            <span>🎵🎬 Ambos</span>
-                        </label>
+                    <!-- 3. Default Duration -->
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <label style="color: #e2e8f0; font-weight: 500;">3. Duración por defecto</label>
+                            <span id="wizardDurationPreview" style="color: #a855f7; font-size: 0.9rem;">= 15:00</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+                            <input type="number" name="duration_min" id="createDurationMin" 
+                                   min="0" max="180" value="15" 
+                                   style="width: 70px; padding: 0.6rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;">
+                            <span style="color: #64748b;">:</span>
+                            <input type="number" name="duration_sec" id="createDurationSec" 
+                                   min="0" max="59" value="00" 
+                                   style="width: 70px; padding: 0.6rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;">
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                             <button type="button" id="btnDefCorto" onclick="setDurationFrom('corto')" style="display:none; font-size: 0.75rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); color: #e2e8f0; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Usar Corto</button>
+                             <button type="button" id="btnDefMediano" onclick="setDurationFrom('mediano')" style="display:none; font-size: 0.75rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); color: #e2e8f0; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Usar Mediano</button>
+                             <button type="button" id="btnDefLargo" onclick="setDurationFrom('largo')" style="display:none; font-size: 0.75rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); color: #e2e8f0; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Usar Largo</button>
+                            <!-- Botón "Usar" que se activará desde JS -->
+                            <button type="button" id="btnUseDetectedDuration" style="display:none; padding: 0.4rem 0.8rem; background: #22c55e; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 0.8rem;">
+                                Usar duración detectada
+                            </button>
+                            
+                            <button type="button" onclick="setCreateDuration(5, 0)" class="duration-preset-btn">5m</button>
+                            <button type="button" onclick="setCreateDuration(10, 0)" class="duration-preset-btn">10m</button>
+                            <button type="button" onclick="setCreateDuration(15, 0)" class="duration-preset-btn">15m</button>
+                            <button type="button" onclick="setCreateDuration(20, 0)" class="duration-preset-btn">20m</button>
+                            <button type="button" onclick="setCreateDuration(30, 0)" class="duration-preset-btn">30m</button>
+                        </div>
+                        <style>
+                            .duration-preset-btn {
+                                padding: 0.4rem 0.75rem;
+                                background: rgba(168, 85, 247, 0.15);
+                                border: 1px solid rgba(168, 85, 247, 0.3);
+                                border-radius: 6px;
+                                color: #a855f7;
+                                cursor: pointer;
+                                font-size: 0.8rem;
+                                transition: all 0.2s ease;
+                            }
+                            .duration-preset-btn:hover {
+                                background: rgba(168, 85, 247, 0.3);
+                            }
+                        </style>
                     </div>
                 </div>
                 
-                <!-- Modo de luz (no modificable por usuario) -->
-                <div class="form-group">
-                    <label>Modo de luz predeterminado</label>
-                    <select name="color_mode" id="createTherapyColorMode">
-                        <option value="default">Por defecto</option>
-                        <!-- Se cargan dinámicamente -->
-                    </select>
-                    <small style="color: #64748b; font-size: 0.75rem;">El usuario puede sobrescribir temporalmente</small>
-                </div>
-                
-                <!-- Intensidad por defecto -->
-                <div class="form-group">
-                    <label>Intensidad por defecto: <span id="createIntensityValue">50</span>%</label>
-                    <input type="range" name="default_intensity" min="0" max="100" value="50" 
-                           oninput="document.getElementById('createIntensityValue').textContent = this.value"
-                           style="width: 100%;">
-                </div>
-                
-                <!-- Duración predeterminada (Formato MM:SS) -->
-                <div class="form-group">
-                    <label>Duración predeterminada * <small style="color: #64748b;">(MM:SS)</small></label>
-                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
-                        <input type="number" name="duration_min" id="createDurationMin" 
-                               min="0" max="180" value="15" 
-                               style="width: 80px; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;"
-                               placeholder="Min">
-                        <span style="color: #a855f7; font-size: 1.5rem; font-weight: bold;">:</span>
-                        <input type="number" name="duration_sec" id="createDurationSec" 
-                               min="0" max="59" value="0" 
-                               style="width: 80px; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;"
-                               placeholder="Seg">
-                        <span id="createDurationPreview" style="color: #64748b; font-size: 0.9rem; margin-left: 0.5rem;">= 15:00</span>
+                <!-- STEP 3: REVIEW -->
+                <div class="wizard-panel" id="wizardPanel3">
+                    <h4 style="color: #a855f7; margin-bottom: 1rem;">✅ Revisar y Confirmar</h4>
+                    
+                    <div class="review-section">
+                        <h5 style="color: #a855f7; font-size: 0.85rem; margin-bottom: 0.5rem;">📝 Información</h5>
+                        <div class="review-row">
+                            <span class="review-label">Nombre</span>
+                            <span class="review-value" id="reviewName">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Descripción</span>
+                            <span class="review-value" id="reviewDescription">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Categoría</span>
+                            <span class="review-value" id="reviewCategory">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Acceso</span>
+                            <span class="review-value" id="reviewAccess">--</span>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                        <button type="button" onclick="setCreateDuration(5, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">5:00</button>
-                        <button type="button" onclick="setCreateDuration(5, 30)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">5:30</button>
-                        <button type="button" onclick="setCreateDuration(10, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">10:00</button>
-                        <button type="button" onclick="setCreateDuration(15, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">15:00</button>
-                        <button type="button" onclick="setCreateDuration(20, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">20:00</button>
-                        <button type="button" onclick="setCreateDuration(30, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">30:00</button>
+                    
+                    <div class="review-section">
+                        <h5 style="color: #a855f7; font-size: 0.85rem; margin-bottom: 0.5rem;">⏱️ Configuración</h5>
+                        <div class="review-row">
+                            <span class="review-label">Tipo de contenido</span>
+                            <span class="review-value" id="reviewMediaType">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Duración</span>
+                            <span class="review-value" id="reviewDuration" style="color: #22c55e; font-weight: bold;">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Modo de luz</span>
+                            <span class="review-value" id="reviewColorMode">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Intensidad</span>
+                            <span class="review-value" id="reviewIntensity">--</span>
+                        </div>
                     </div>
-                    <small class="help-text" style="margin-top: 0.5rem; display: block;">Esta es la duración que se usará por defecto al iniciar la terapia con "▶️ Iniciar"</small>
-                </div>
-                
-                <!-- Tipos de duración habilitados -->
-                <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-                    <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">⏱️ Tipos de duración disponibles</h4>
-                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 1rem;">Selecciona qué opciones de duración estarán disponibles para personalizar</p>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="enable_corto" id="createEnableCorto" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
-                            <span style="color: #e2e8f0;">Corto (0-5 min)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="enable_mediano" id="createEnableMediano" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
-                            <span style="color: #e2e8f0;">Mediano (6-20 min)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="enable_largo" id="createEnableLargo" checked style="accent-color: #22c55e; width: 18px; height: 18px;">
-                            <span style="color: #e2e8f0;">Largo (21+ min)</span>
-                        </label>
+                    
+                    <div class="review-section" id="reviewAudioSection" style="display: none;">
+                        <h5 style="color: #22c55e; font-size: 0.85rem; margin-bottom: 0.5rem;">🎵 Audio Seleccionado</h5>
+                        <div class="review-row">
+                            <span class="review-label">Archivo</span>
+                            <span class="review-value" id="reviewAudioFile">--</span>
+                        </div>
+                        <div class="review-row">
+                            <span class="review-label">Duración del audio</span>
+                            <span class="review-value" id="reviewAudioDuration">--</span>
+                        </div>
                     </div>
+                    
+                    <!-- Hidden fields for types -->
+                    <input type="hidden" name="enable_corto" id="createEnableCorto" value="true">
+                    <input type="hidden" name="enable_mediano" id="createEnableMediano" value="true">
+                    <input type="hidden" name="enable_largo" id="createEnableLargo" value="true">
+                    <input type="hidden" name="duration_labels" value="">
                 </div>
                 
-                <!-- Etiquetas personalizadas -->
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label>Etiquetas de duración (opcional)</label>
-                    <input type="text" name="duration_labels" placeholder='Ej: {"corto": "Rápido", "mediano": "Normal", "largo": "Extendido"}'>
-                    <small style="color: #64748b; font-size: 0.75rem;">JSON con etiquetas personalizadas</small>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('createTherapy')">Cancelar</button>
-                    <button type="submit" class="btn-primary">Crear y subir archivos →</button>
+                <!-- WIZARD NAVIGATION -->
+                <div class="modal-actions" style="display: flex; justify-content: space-between; padding: 1rem 1.5rem; border-top: 1px solid rgba(168, 85, 247, 0.2);">
+                    <button type="button" class="btn-secondary" id="wizardPrevBtn" onclick="wizardPrevStep()" style="display: none;">← Anterior</button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" class="btn-primary" id="wizardNextBtn" onclick="wizardNextStep()">Siguiente →</button>
+                    <button type="submit" class="btn-primary" id="wizardSubmitBtn" style="display: none; background: #22c55e;">✅ Crear Terapia</button>
                 </div>
             </form>
         </div>
@@ -1594,103 +1894,190 @@
 
     <!-- Modal: Edit Therapy -->
     <div class="modal-overlay" id="modal-editTherapy">
-        <div class="modal" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
-                <h3>Editar terapia</h3>
+                <h3>✏️ Editar Terapia</h3>
                 <button class="modal-close" onclick="closeModal('editTherapy')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
+            
+            <!-- TAB NAVIGATION -->
+            <div class="edit-tabs" style="display: flex; border-bottom: 1px solid rgba(168, 85, 247, 0.3); background: rgba(0,0,0,0.2);">
+                <button type="button" class="edit-tab active" onclick="switchEditTab('info')" data-tab="info">
+                    📝 General
+                </button>
+                <button type="button" class="edit-tab" onclick="switchEditTab('config')" data-tab="config">
+                    ⚙️ Configuración
+                </button>
+                <button type="button" class="edit-tab" onclick="switchEditTab('media')" data-tab="media">
+                    🎵 Media
+                </button>
+            </div>
+            
+            <style>
+                .edit-tab {
+                    flex: 1;
+                    padding: 0.75rem 1rem;
+                    background: transparent;
+                    border: none;
+                    color: #94a3b8;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    transition: all 0.3s ease;
+                    border-bottom: 2px solid transparent;
+                }
+                .edit-tab:hover {
+                    background: rgba(168, 85, 247, 0.1);
+                    color: #c084fc;
+                }
+                .edit-tab.active {
+                    color: #a855f7;
+                    border-bottom-color: #a855f7;
+                    background: rgba(168, 85, 247, 0.1);
+                }
+                .edit-panel {
+                    display: none;
+                    padding: 1.5rem;
+                    animation: fadeIn 0.3s ease;
+                }
+                .edit-panel.active {
+                    display: block;
+                }
+                .edit-section {
+                    background: rgba(0,0,0,0.2);
+                    border: 1px solid rgba(168, 85, 247, 0.2);
+                    border-radius: 10px;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                }
+                .edit-section-title {
+                    color: #a855f7;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    margin-bottom: 0.75rem;
+                }
+                .media-upload-card {
+                    background: rgba(0,0,0,0.3);
+                    border: 1px solid rgba(168, 85, 247, 0.2);
+                    border-radius: 10px;
+                    padding: 1rem;
+                    margin-bottom: 0.75rem;
+                }
+                .media-upload-card.has-file {
+                    border-color: rgba(34, 197, 94, 0.5);
+                }
+            </style>
+            
             <form id="editTherapyForm">
                 <input type="hidden" name="therapyId" id="editTherapyId">
 
-                <div class="form-group" style="margin-top: 0;">
-                    <div class="field-row">
-                        <span class="pill">ID: <span id="editTherapyIdLabel">—</span></span>
+                <!-- TAB 1: GENERAL INFO -->
+                <div class="edit-panel active" id="editPanel-info">
+                    <!-- Status Bar -->
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <span class="pill" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">
+                            ID: <span id="editTherapyIdLabel">—</span>
+                        </span>
                         <span id="editTherapyActivePill" class="pill">Estado: —</span>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-                        <span>Estado</span>
-                        <span class="help-text" style="margin: 0;">Desactiva para ocultar en el panel principal</span>
-                    </label>
-                    <div class="field-row">
-                        <label style="display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer;">
-                            <input type="checkbox" id="editTherapyIsActive" name="is_active" style="accent-color: #22c55e; width: 18px; height: 18px;">
-                            <span id="editTherapyIsActiveLabel" style="color: #e2e8f0;">Activa</span>
-                        </label>
+                    
+                    <!-- Status Toggle -->
+                    <div class="edit-section">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                            <input type="checkbox" id="editTherapyIsActive" name="is_active" 
+                                   style="accent-color: #22c55e; width: 20px; height: 20px; cursor: pointer;">
+                            <div>
+                                <div id="editTherapyIsActiveLabel" style="color: #e2e8f0; font-weight: 500;">Activa</div>
+                                <small style="color: #64748b;">Desactiva para ocultar del panel principal</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Basic Info -->
+                    <div class="edit-section">
+                        <div class="edit-section-title">📝 Información Básica</div>
+                        
+                        <div class="form-group">
+                            <label>Nombre de la terapia *</label>
+                            <input type="text" name="name" id="editTherapyName" required placeholder="Nombre de la terapia">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <textarea name="description" id="editTherapyDescription" rows="2" placeholder="Descripción breve"></textarea>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group" style="margin: 0;">
+                                <label>Categoría</label>
+                                <select name="category" id="editTherapyCategory">
+                                    <option value="">Sin categoría</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label>Acceso</label>
+                                <select name="access_level" id="editTherapyAccessLevel">
+                                    <option value="basic">🔓 Básica</option>
+                                    <option value="premium">⭐ Premium</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" name="name" id="editTherapyName" required>
-                </div>
-                <div class="form-group">
-                    <label>Descripción</label>
-                    <textarea name="description" id="editTherapyDescription" rows="2"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Categoría</label>
-                    <select name="category" id="editTherapyCategory">
-                        <option value="">Sin categoría</option>
-                        <!-- Se cargan dinámicamente -->
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Acceso</label>
-                    <select name="access_level" id="editTherapyAccessLevel">
-                        <option value="basic">Básica</option>
-                        <option value="premium">Premium</option>
-                    </select>
-                </div>
                 
-                <!-- Modo de luz -->
-                <div class="form-group">
-                    <label>Modo de luz predeterminado</label>
-                    <select name="color_mode" id="editTherapyColorMode">
-                        <option value="default">Por defecto</option>
-                        <!-- Se cargan dinámicamente -->
-                    </select>
-                </div>
-                
-                <!-- Intensidad por defecto -->
-                <div class="form-group">
-                    <label>Intensidad por defecto: <span id="editIntensityValue">50</span>%</label>
-                    <input type="range" name="default_intensity" id="editTherapyIntensity" min="0" max="100" value="50" 
-                           oninput="document.getElementById('editIntensityValue').textContent = this.value"
-                           style="width: 100%;">
-                </div>
-                
-                <!-- Duración predeterminada (Formato MM:SS) -->
-                <div class="form-group">
-                    <label>Duración predeterminada * <small style="color: #64748b;">(MM:SS)</small></label>
-                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
-                        <input type="number" name="edit_duration_min" id="editDurationMin" 
-                               min="0" max="180" value="15" 
-                               style="width: 80px; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;"
-                               placeholder="Min">
-                        <span style="color: #a855f7; font-size: 1.5rem; font-weight: bold;">:</span>
-                        <input type="number" name="edit_duration_sec" id="editDurationSec" 
-                               min="0" max="59" value="0" 
-                               style="width: 80px; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;"
-                               placeholder="Seg">
-                        <span id="editDurationPreview" style="color: #64748b; font-size: 0.9rem; margin-left: 0.5rem;">= 15:00</span>
+                <!-- TAB 2: CONFIG -->
+                <div class="edit-panel" id="editPanel-config">
+                    <!-- Light Mode & Intensity -->
+                    <div class="edit-section">
+                        <div class="edit-section-title">💡 Modo de Luz e Intensidad</div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group" style="margin: 0;">
+                                <label>Modo predeterminado</label>
+                                <select name="color_mode" id="editTherapyColorMode">
+                                    <option value="default">Por defecto</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label>Intensidad: <span id="editIntensityValue" style="color: #a855f7; font-weight: bold;">50</span>%</label>
+                                <input type="range" name="default_intensity" id="editTherapyIntensity" min="0" max="100" value="50" 
+                                       oninput="document.getElementById('editIntensityValue').textContent = this.value"
+                                       style="width: 100%;">
+                            </div>
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                        <button type="button" onclick="setEditDuration(5, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">5:00</button>
-                        <button type="button" onclick="setEditDuration(5, 30)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">5:30</button>
-                        <button type="button" onclick="setEditDuration(10, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">10:00</button>
-                        <button type="button" onclick="setEditDuration(15, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">15:00</button>
-                        <button type="button" onclick="setEditDuration(20, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">20:00</button>
-                        <button type="button" onclick="setEditDuration(30, 0)" style="padding: 0.4rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; color: #a855f7; cursor: pointer; font-size: 0.8rem;">30:00</button>
+                    
+                    <!-- Duration -->
+                    <div class="edit-section">
+                        <div class="edit-section-title">⏱️ Duración Predeterminada</div>
+                        
+                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+                            <input type="number" name="edit_duration_min" id="editDurationMin" 
+                                   min="0" max="180" value="15" 
+                                   style="width: 70px; padding: 0.6rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;">
+                            <span style="color: #a855f7; font-size: 1.25rem; font-weight: bold;">:</span>
+                            <input type="number" name="edit_duration_sec" id="editDurationSec" 
+                                   min="0" max="59" value="0" 
+                                   style="width: 70px; padding: 0.6rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 1rem; text-align: center;">
+                            <span id="editDurationPreview" style="color: #22c55e; font-size: 0.9rem; margin-left: 0.5rem; font-weight: 500;">= 15:00</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button type="button" onclick="setEditDuration(5, 0)" class="duration-preset-btn">5:00</button>
+                            <button type="button" onclick="setEditDuration(5, 30)" class="duration-preset-btn">5:30</button>
+                            <button type="button" onclick="setEditDuration(10, 0)" class="duration-preset-btn">10:00</button>
+                            <button type="button" onclick="setEditDuration(15, 0)" class="duration-preset-btn">15:00</button>
+                            <button type="button" onclick="setEditDuration(20, 0)" class="duration-preset-btn">20:00</button>
+                            <button type="button" onclick="setEditDuration(30, 0)" class="duration-preset-btn">30:00</button>
+                        </div>
+                        
+                        <small style="color: #64748b; display: block; margin-top: 0.75rem;">
+                            Esta es la duración usada al iniciar con "▶️ Iniciar"
+                        </small>
                     </div>
-                    <small class="help-text" style="margin-top: 0.5rem; display: block;">Esta es la duración que se usará por defecto al iniciar la terapia con "▶️ Iniciar"</small>
-                </div>
                 
                 <!-- Duraciones por tipo -->
                 <div style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
@@ -1721,124 +2108,119 @@
                     <div class="help-text">Formato JSON. Ej: <span style="color:#c084fc;">{"corto":"Track 1"}</span></div>
                 </div>
 
-                <!-- Tipo de media (auto-detectado) -->
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label>Tipo de media</label>
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                        <span id="editMediaTypeBadge" class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
-                            Detectando...
-                        </span>
-                        <select id="editTherapyMediaType" name="media_type" style="padding: 0.45rem 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; color: #fff; font-size: 0.9rem;">
-                            <option value="audio">Audio</option>
-                            <option value="video">Video</option>
-                            <option value="both">Audio + Video</option>
-                        </select>
-                        <span id="editMediaDetectedPill" class="pill">Detectado: —</span>
-                        <span id="editMediaMismatchPill" class="pill warn" style="display:none;">⚠️ No coincide</span>
-                        <button type="button" class="btn-secondary" onclick="showAllEditMediaSections()" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">
-                            Mostrar todo
-                        </button>
-                        <span id="editMediaTypeHint" style="font-size: 0.8rem; color: #94a3b8;"></span>
-                    </div>
-                </div>
-
-                <!-- Vista previa de media -->
-                <div class="media-preview">
-                    <h4 style="color: #e2e8f0; margin-bottom: 0.75rem; font-size: 0.95rem;">👁️ Vista previa</h4>
-                    <div class="media-grid">
-                        <div class="media-card">
-                            <h5>
-                                <span>🎵 Audio Corto</span>
-                                <a id="previewAudioCortoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
-                            </h5>
-                            <audio id="previewAudioCorto" controls style="width: 100%; display:none;"></audio>
-                            <div id="previewAudioCortoMeta" class="help-text">—</div>
-                        </div>
-                        <div class="media-card">
-                            <h5>
-                                <span>🎵 Audio Mediano</span>
-                                <a id="previewAudioMedianoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
-                            </h5>
-                            <audio id="previewAudioMediano" controls style="width: 100%; display:none;"></audio>
-                            <div id="previewAudioMedianoMeta" class="help-text">—</div>
-                        </div>
-                        <div class="media-card">
-                            <h5>
-                                <span>🎵 Audio Largo</span>
-                                <a id="previewAudioLargoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
-                            </h5>
-                            <audio id="previewAudioLargo" controls style="width: 100%; display:none;"></audio>
-                            <div id="previewAudioLargoMeta" class="help-text">—</div>
-                        </div>
-                        <div class="media-card">
-                            <h5>
+                    <!-- Media Type -->
+                    <div class="edit-section">
+                        <div class="edit-section-title">🎬 Tipo de Contenido</div>
+                        
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; cursor: pointer;">
+                                <input type="radio" name="media_type" value="audio" id="editMediaAudio" style="accent-color: #a855f7;">
+                                <span>🎵 Audio</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; cursor: pointer;">
+                                <input type="radio" name="media_type" value="video" id="editMediaVideo" style="accent-color: #a855f7;">
                                 <span>🎬 Video</span>
-                                <a id="previewVideoLink" class="media-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Abrir</a>
-                            </h5>
-                            <video id="previewVideo" controls muted playsinline style="width: 100%; max-height: 180px; border-radius: 10px; display:none;"></video>
-                            <div id="previewVideoMeta" class="help-text">—</div>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; cursor: pointer;">
+                                <input type="radio" name="media_type" value="both" id="editMediaBoth" style="accent-color: #a855f7;">
+                                <span>🎵🎬 Ambos</span>
+                            </label>
+                        </div>
+                        
+                        <div style="margin-top: 0.75rem;">
+                            <span id="editMediaTypeBadge" class="pill" style="background: rgba(34, 197, 94, 0.2); color: #22c55e;">
+                                Detectado: —
+                            </span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Upload Audios por duración -->
-                <div id="editAudioUploadsSection" style="border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-                    <h4 style="color: #a855f7; margin-bottom: 0.75rem; font-size: 0.9rem;">🎵 Archivos de Audio por Duración</h4>
-                    
-                    <!-- Audio Corto -->
-                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                            <span id="audioCortoStatus">🔇</span> Audio Corto (0-5 min)
-                        </label>
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <input type="file" id="editAudioCorto" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;">
-                            <button type="button" class="btn-secondary" onclick="uploadTherapyAudio('corto')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
-                                Subir
-                            </button>
+                <!-- TAB 3: MEDIA -->
+                <div class="edit-panel" id="editPanel-media">
+                    <!-- Audio Files Section -->
+                    <div class="edit-section">
+                        <div class="edit-section-title">🎵 Archivos de Audio</div>
+                        
+                        <!-- Audio Corto -->
+                        <div class="media-upload-card" id="editAudioCortoCard">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span id="audioCortoStatus" style="font-size: 1.1rem;">🔇</span>
+                                    <span style="color: #e2e8f0; font-size: 0.9rem;">Audio Corto (0-5 min)</span>
+                                </div>
+                                <button type="button" class="btn-primary" onclick="uploadTherapyAudio('corto')" 
+                                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                                    📤 Subir
+                                </button>
+                            </div>
+                            <input type="file" id="editAudioCorto" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="font-size: 0.8rem; width: 100%;">
+                            <audio id="previewAudioCorto" controls style="width: 100%; height: 35px; margin-top: 0.5rem; display: none;"></audio>
+                            <div id="previewAudioCortoMeta" style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Sin archivo</div>
+                        </div>
+                        
+                        <!-- Audio Mediano -->
+                        <div class="media-upload-card" id="editAudioMedianoCard">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span id="audioMedianoStatus" style="font-size: 1.1rem;">🔇</span>
+                                    <span style="color: #e2e8f0; font-size: 0.9rem;">Audio Mediano (6-20 min)</span>
+                                </div>
+                                <button type="button" class="btn-primary" onclick="uploadTherapyAudio('mediano')" 
+                                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                                    📤 Subir
+                                </button>
+                            </div>
+                            <input type="file" id="editAudioMediano" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="font-size: 0.8rem; width: 100%;">
+                            <audio id="previewAudioMediano" controls style="width: 100%; height: 35px; margin-top: 0.5rem; display: none;"></audio>
+                            <div id="previewAudioMedianoMeta" style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Sin archivo</div>
+                        </div>
+                        
+                        <!-- Audio Largo -->
+                        <div class="media-upload-card" id="editAudioLargoCard">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span id="audioLargoStatus" style="font-size: 1.1rem;">🔇</span>
+                                    <span style="color: #e2e8f0; font-size: 0.9rem;">Audio Largo (21+ min)</span>
+                                </div>
+                                <button type="button" class="btn-primary" onclick="uploadTherapyAudio('largo')" 
+                                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                                    📤 Subir
+                                </button>
+                            </div>
+                            <input type="file" id="editAudioLargo" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="font-size: 0.8rem; width: 100%;">
+                            <audio id="previewAudioLargo" controls style="width: 100%; height: 35px; margin-top: 0.5rem; display: none;"></audio>
+                            <div id="previewAudioLargoMeta" style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Sin archivo</div>
                         </div>
                     </div>
                     
-                    <!-- Audio Mediano -->
-                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                            <span id="audioMedianoStatus">🔇</span> Audio Mediano (6-20 min)
-                        </label>
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <input type="file" id="editAudioMediano" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;">
-                            <button type="button" class="btn-secondary" onclick="uploadTherapyAudio('mediano')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
-                                Subir
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Audio Largo -->
-                    <div class="form-group" style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                            <span id="audioLargoStatus">🔇</span> Audio Largo (21+ min)
-                        </label>
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <input type="file" id="editAudioLargo" accept=".mp3,.wav,.m4a,.aac,.ogg,.flac" style="flex: 1; font-size: 0.8rem;">
-                            <button type="button" class="btn-secondary" onclick="uploadTherapyAudio('largo')" style="font-size: 0.75rem; padding: 0.4rem 0.75rem;">
-                                Subir
-                            </button>
+                    <!-- Video Section -->
+                    <div class="edit-section">
+                        <div class="edit-section-title">🎬 Video</div>
+                        
+                        <div class="media-upload-card" id="editVideoCard">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span id="videoStatus" style="font-size: 1.1rem;">🔇</span>
+                                    <span style="color: #e2e8f0; font-size: 0.9rem;">Video (opcional)</span>
+                                </div>
+                                <button type="button" class="btn-primary" onclick="uploadTherapyMedia('video')" 
+                                        style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                                    📤 Subir
+                                </button>
+                            </div>
+                            <input type="file" name="video" id="editTherapyVideo" accept=".mp4,.webm,.mov,.avi,.mkv" style="font-size: 0.8rem; width: 100%;">
+                            <video id="previewVideo" controls muted playsinline style="width: 100%; max-height: 150px; border-radius: 8px; margin-top: 0.5rem; display: none;"></video>
+                            <div id="previewVideoMeta" style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Sin archivo</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Upload Video -->
-                <div id="editVideoUploadSection" class="form-group" style="border: 1px dashed #475569; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                    <label style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span id="videoStatus">🔇</span> Video (opcional)
-                    </label>
-                    <input type="file" name="video" id="editTherapyVideo" accept=".mp4,.webm,.mov,.avi,.mkv" style="margin-top: 0.5rem;">
-                    <button type="button" class="btn-secondary" onclick="uploadTherapyMedia('video')" style="margin-top: 0.5rem; font-size: 0.8rem;">
-                        Subir Video
-                    </button>
-                </div>
-
-                <div class="modal-actions">
+                <!-- FOOTER ACTIONS -->
+                <div class="modal-actions" style="display: flex; justify-content: space-between; padding: 1rem 1.5rem; border-top: 1px solid rgba(168, 85, 247, 0.2); background: rgba(0,0,0,0.2);">
                     <button type="button" class="btn-secondary" onclick="closeModal('editTherapy')">Cancelar</button>
-                    <button type="submit" class="btn-primary" id="editTherapySaveBtn">Guardar cambios</button>
+                    <button type="submit" class="btn-primary" id="editTherapySaveBtn" style="background: #22c55e;">
+                        💾 Guardar Cambios
+                    </button>
                 </div>
             </form>
         </div>
@@ -2441,24 +2823,8 @@
             }
             if (name === 'createTherapy') {
                 loadTherapyFormOptions();
-                
-                // Setup duration MM:SS input listeners for live preview
-                const minInput = document.getElementById('createDurationMin');
-                const secInput = document.getElementById('createDurationSec');
-                const preview = document.getElementById('createDurationPreview');
-                
-                const updatePreview = () => {
-                    const min = parseInt(minInput.value) || 0;
-                    const sec = parseInt(secInput.value) || 0;
-                    const totalSec = (min * 60) + sec;
-                    const displayMin = Math.floor(totalSec / 60);
-                    const displaySec = totalSec % 60;
-                    preview.textContent = `= ${displayMin}:${String(displaySec).padStart(2, '0')} (${totalSec}s)`;
-                };
-                
-                minInput.addEventListener('input', updatePreview);
-                secInput.addEventListener('input', updatePreview);
-                updatePreview(); // Initial preview
+                // Initialize the wizard
+                initWizard();
             }
             document.getElementById(`modal-${name}`).classList.add('show');
         }
@@ -2467,17 +2833,7 @@
             document.getElementById(`modal-${name}`).classList.remove('show');
         }
         
-        // Helper function for quick duration presets
-        function setCreateDuration(min, sec) {
-            document.getElementById('createDurationMin').value = min;
-            document.getElementById('createDurationSec').value = sec;
-            // Trigger preview update
-            const totalSec = (min * 60) + sec;
-            const displayMin = Math.floor(totalSec / 60);
-            const displaySec = totalSec % 60;
-            document.getElementById('createDurationPreview').textContent = 
-                `= ${displayMin}:${String(displaySec).padStart(2, '0')} (${totalSec}s)`;
-        }
+
         
         // Helper function for edit form duration presets
         function setEditDuration(min, sec) {
@@ -2489,6 +2845,388 @@
             const displaySec = totalSec % 60;
             document.getElementById('editDurationPreview').textContent = 
                 `= ${displayMin}:${String(displaySec).padStart(2, '0')} (${totalSec}s)`;
+        }
+        
+        // ─────────────────────────────────────────────────────
+        // WIZARD STATE MANAGEMENT
+        // ─────────────────────────────────────────────────────
+        let currentWizardStep = 1;
+        // Support for multiple files
+        let wizardFiles = {
+            corto: null,
+            mediano: null,
+            largo: null,
+            video: null
+        };
+        
+        function goToWizardStep(step) {
+            // Validation for forward navigation
+            if (step > currentWizardStep) {
+                if (!validateWizardStep(currentWizardStep)) {
+                    return false;
+                }
+            }
+            
+            // Update step indicators
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`wizardStep${i}`);
+                const panelEl = document.getElementById(`wizardPanel${i}`);
+                
+                stepEl.classList.remove('active', 'completed');
+                panelEl.classList.remove('active');
+                
+                if (i < step) {
+                    stepEl.classList.add('completed');
+                } else if (i === step) {
+                    stepEl.classList.add('active');
+                    panelEl.classList.add('active');
+                }
+            }
+            
+            currentWizardStep = step;
+            updateWizardNavigation();
+            
+            // Populate review on step 3
+            if (step === 3) {
+                populateWizardReview();
+            }
+            
+            return true;
+        }
+        
+        function wizardNextStep() {
+            if (currentWizardStep < 3) {
+                goToWizardStep(currentWizardStep + 1);
+            }
+        }
+        
+        function wizardPrevStep() {
+            if (currentWizardStep > 1) {
+                goToWizardStep(currentWizardStep - 1);
+            }
+        }
+        
+        function validateWizardStep(step) {
+            if (step === 1) {
+                const name = document.getElementById('wizardName').value.trim();
+                if (!name) {
+                    showToast('Por favor ingresa un nombre para la terapia', 'error');
+                    return false;
+                }
+            }
+            if (step === 2) {
+                const durationMin = parseInt(document.getElementById('createDurationMin').value) || 0;
+                const durationSec = parseInt(document.getElementById('createDurationSec').value) || 0;
+                const totalSec = (durationMin * 60) + durationSec;
+                if (totalSec < 30) {
+                    showToast('La duración por defecto debe ser al menos 30 segundos', 'error');
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        function updateWizardNavigation() {
+            const prevBtn = document.getElementById('wizardPrevBtn');
+            const nextBtn = document.getElementById('wizardNextBtn');
+            const submitBtn = document.getElementById('wizardSubmitBtn');
+            
+            // Show/hide buttons based on step
+            prevBtn.style.display = currentWizardStep > 1 ? 'block' : 'none';
+            nextBtn.style.display = currentWizardStep < 3 ? 'block' : 'none';
+            submitBtn.style.display = currentWizardStep === 3 ? 'block' : 'none';
+        }
+        
+        // Handle audio file upload in wizard (Multi-file)
+        function handleWizardAudioUpload(type, input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            wizardFiles[type] = file;
+            
+            const statusIcon = document.getElementById(`wizardStatus${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const infoEl = document.getElementById(`wizardInfo${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const useBtn = document.getElementById(`wizardUseDuration${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const defBtn = document.getElementById(`btnDef${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            
+            // Show loading state
+            if (statusIcon) statusIcon.textContent = '⏳';
+            if (infoEl) {
+                infoEl.style.display = 'block';
+                infoEl.textContent = 'Analizando...';
+            }
+            if (useBtn) useBtn.style.display = 'none';
+            if (defBtn) defBtn.style.display = 'none';
+            
+            // If video, just valid and done
+            if (type === 'video') {
+                if (statusIcon) statusIcon.textContent = '✅';
+                if (infoEl) infoEl.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                return;
+            }
+
+            // Audio analysis
+            const audio = new Audio();
+            audio.src = URL.createObjectURL(file);
+            
+            audio.onloadedmetadata = () => {
+                const duration = Math.round(audio.duration);
+                const mins = Math.floor(duration / 60);
+                const secs = duration % 60;
+                const formatted = `${mins}:${String(secs).padStart(2, '0')}`;
+                
+                // Store duration
+                wizardFiles[type].duration = duration;
+                
+                if (statusIcon) statusIcon.textContent = '✅';
+                if (infoEl) infoEl.textContent = `Duración: ${formatted} (${duration}s)`;
+                
+                // Show Use Duration button and Default Set button
+                if (useBtn) useBtn.style.display = 'block';
+                if (defBtn) defBtn.style.display = 'inline-block';
+            };
+            
+            audio.onerror = () => {
+                if (statusIcon) statusIcon.textContent = '❌';
+                if (infoEl) infoEl.textContent = 'Error al leer archivo';
+            };
+        }
+        
+        function useDetectedDuration(type) {
+            const file = wizardFiles[type];
+            if (!file || !file.duration) return;
+            
+            // Duration in minutes (rounded up)
+            const durationMin = Math.ceil(file.duration / 60);
+            
+            const inputId = `wizardLimit${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            const input = document.getElementById(inputId);
+            
+            if (input) {
+                input.value = durationMin;
+                
+                // Visual feedback
+                const originalBg = input.style.background;
+                input.style.background = 'rgba(34, 197, 94, 0.2)'; // Green tint
+                input.style.borderColor = '#22c55e';
+                
+                setTimeout(() => {
+                    input.style.background = originalBg;
+                    input.style.borderColor = 'rgba(168, 85, 247, 0.3)';
+                }, 1000);
+                
+                showToast(`Límite actualizado a ${durationMin} min`, 'success');
+            }
+        }
+
+        function setDurationFrom(type) {
+            const file = wizardFiles[type];
+            if (!file || !file.duration) return;
+            
+            const duration = file.duration;
+            const mins = Math.floor(duration / 60);
+            const secs = duration % 60;
+            
+            setCreateDuration(mins, secs);
+            showToast(`Duración por defecto establecida desde Audio ${type.charAt(0).toUpperCase() + type.slice(1)}`, 'success');
+        }
+        
+        // Populate review step
+        function populateWizardReview() {
+            const form = document.getElementById('createTherapyForm');
+            
+            // Info section
+            document.getElementById('reviewName').textContent = document.getElementById('wizardName').value || '--';
+            document.getElementById('reviewDescription').textContent = 
+                document.getElementById('wizardDescription').value || 'Sin descripción';
+            
+            const categorySelect = document.getElementById('createTherapyCategory');
+            document.getElementById('reviewCategory').textContent = 
+                categorySelect.options[categorySelect.selectedIndex]?.text || 'Sin categoría';
+            
+            const accessSelect = document.getElementById('createTherapyAccessLevel');
+            document.getElementById('reviewAccess').textContent = 
+                accessSelect.value === 'premium' ? '⭐ Premium' : '🔓 Básica';
+            
+            // Config section
+            const mediaType = form.querySelector('input[name="media_type"]:checked')?.value || 'audio';
+            const mediaLabels = { audio: '🎵 Audio', video: '🎬 Video', both: '🎵🎬 Ambos' };
+            document.getElementById('reviewMediaType').textContent = mediaLabels[mediaType] || mediaType;
+            
+            const durationMin = parseInt(document.getElementById('createDurationMin').value) || 0;
+            const durationSec = parseInt(document.getElementById('createDurationSec').value) || 0;
+            const totalSec = (durationMin * 60) + durationSec;
+            document.getElementById('reviewDuration').textContent = 
+                `${durationMin}:${String(durationSec).padStart(2, '0')} (${totalSec} segundos)`;
+            
+            const colorModeSelect = document.getElementById('createTherapyColorMode');
+            document.getElementById('reviewColorMode').textContent = 
+                colorModeSelect.options[colorModeSelect.selectedIndex]?.text || 'Por defecto';
+            
+            document.getElementById('reviewIntensity').textContent = 
+                `${document.querySelector('input[name="default_intensity"]').value}%`;
+            
+            // Audio section (Files list)
+            const audioSection = document.getElementById('reviewAudioSection');
+            const fileList = [];
+            if (wizardFiles.corto) fileList.push(`Corto: ${wizardFiles.corto.name}`);
+            if (wizardFiles.mediano) fileList.push(`Mediano: ${wizardFiles.mediano.name}`);
+            if (wizardFiles.largo) fileList.push(`Largo: ${wizardFiles.largo.name}`);
+            if (wizardFiles.video) fileList.push(`Video: ${wizardFiles.video.name}`);
+
+            if (fileList.length > 0) {
+                audioSection.style.display = 'block';
+                document.getElementById('reviewAudioFile').innerHTML = fileList.join('<br>');
+                document.getElementById('reviewAudioDuration').style.display = 'none'; // Hide single duration
+            } else {
+                audioSection.style.display = 'none';
+            }
+        }
+        
+        // Reset wizard state
+        function resetWizard() {
+            currentWizardStep = 1;
+            wizardFiles = {
+                corto: null,
+                mediano: null,
+                largo: null,
+                video: null
+            };
+            
+            // Reset form completely
+            const form = document.getElementById('createTherapyForm');
+            if (form) form.reset();
+            
+            // Reset uploads UI
+            document.querySelectorAll('.wizard-file-input').forEach(input => input.value = '');
+            document.querySelectorAll('.status-icon').forEach(icon => {
+                if(icon.id.includes('Video') && icon.id.includes('wizard')) icon.textContent = '🎬';
+                else if(icon.id.includes('wizard')) icon.textContent = '⚪';
+            });
+            document.querySelectorAll('.file-info').forEach(info => {
+                 if(info.id.includes('wizard')) {
+                     info.style.display = 'none';
+                     info.textContent = '';
+                 }
+            });
+            
+            // Reset duration preview
+            if(document.getElementById('createDurationMin')) document.getElementById('createDurationMin').value = 15;
+            if(document.getElementById('createDurationSec')) document.getElementById('createDurationSec').value = 0;
+            if(typeof updateWizardDurationPreview === 'function') updateWizardDurationPreview();
+            
+            // Reset to step 1
+            goToWizardStep(1);
+        }
+
+        // Helper function for quick duration presets
+        function setCreateDuration(min, sec) {
+            document.getElementById('createDurationMin').value = min;
+            document.getElementById('createDurationSec').value = sec;
+            // Trigger preview update
+            const totalSec = (min * 60) + sec;
+            const displayMin = Math.floor(totalSec / 60);
+            const displaySec = totalSec % 60;
+            // Use correct ID wizardDurationPreview
+            const previewEl = document.getElementById('wizardDurationPreview');
+            if (previewEl) {
+                previewEl.textContent = `= ${displayMin}:${String(displaySec).padStart(2, '0')} (${totalSec}s)`;
+            }
+        }
+        
+        // Update duration preview in wizard
+        function updateWizardDurationPreview() {
+            const min = parseInt(document.getElementById('createDurationMin').value) || 0;
+            const sec = parseInt(document.getElementById('createDurationSec').value) || 0;
+            const total = min * 60 + sec;
+            const preview = document.getElementById('wizardDurationPreview');
+            if (preview) {
+                preview.textContent = `= ${min}:${String(sec).padStart(2, '0')}`;
+            }
+        }
+        
+        // Init wizard duration listeners
+        function initWizardDurationListeners() {
+            const minInput = document.getElementById('createDurationMin');
+            const secInput = document.getElementById('createDurationSec');
+            
+            if (minInput) {
+                minInput.addEventListener('input', updateWizardDurationPreview);
+            }
+            if (secInput) {
+                secInput.addEventListener('input', updateWizardDurationPreview);
+            }
+        }
+        
+        // Add drag and drop support to upload zone
+        function initWizardDragDrop() {
+            const uploadZone = document.getElementById('wizardUploadZone');
+            if (!uploadZone) return;
+            
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.style.borderColor = '#a855f7';
+                uploadZone.style.background = 'rgba(168, 85, 247, 0.15)';
+            });
+            
+            uploadZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadZone.style.borderColor = '';
+                uploadZone.style.background = '';
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.style.borderColor = '';
+                uploadZone.style.background = '';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const fileInput = document.getElementById('wizardAudioFile');
+                    fileInput.files = files;
+                    handleWizardAudioUpload(fileInput);
+                }
+            });
+        }
+        
+        // Initialize wizard when modal opens
+        function initWizard() {
+            resetWizard();
+            initWizardDurationListeners();
+            initWizardDragDrop();
+        }
+        
+        // ─────────────────────────────────────────────────────
+        // EDIT MODAL TAB MANAGEMENT
+        // ─────────────────────────────────────────────────────
+        function switchEditTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.edit-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.tab === tabName) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Update panels
+            document.querySelectorAll('.edit-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            const targetPanel = document.getElementById(`editPanel-${tabName}`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        }
+        
+        function initEditTabs() {
+            // Reset to first tab
+            document.querySelectorAll('.edit-tab').forEach((tab, index) => {
+                tab.classList.toggle('active', index === 0);
+            });
+            document.querySelectorAll('.edit-panel').forEach((panel, index) => {
+                panel.classList.toggle('active', index === 0);
+            });
         }
 
         function openCreditsModal(userId) {
@@ -2596,59 +3334,149 @@
         }
         
         document.getElementById('createTherapyForm').addEventListener('submit', async (e) => {
+            console.log("Wizard Create Therapy Submitted");
             e.preventDefault();
             const form = e.target;
+            const submitBtn = document.getElementById('wizardSubmitBtn');
             
-            // Obtener tipo de media
-            const mediaType = form.media_type.value;
-            
-            // Obtener tipos de duración habilitados
-            const enableCorto = form.enable_corto.checked;
-            const enableMediano = form.enable_mediano.checked;
-            const enableLargo = form.enable_largo.checked;
-            
-            // Calculate default_duration_sec from MM:SS inputs
-            const durationMin = parseInt(form.duration_min?.value) || 0;
-            const durationSec = parseInt(form.duration_sec?.value) || 0;
-            const defaultDurationSec = (durationMin * 60) + durationSec;
-            
-            if (defaultDurationSec < 30) {
-                showToast('La duración debe ser al menos 30 segundos', 'error');
-                return;
-            }
-            
-            const data = {
-                name: form.name.value,
-                description: form.description.value || null,
-                category: form.category.value || null,
-                access_level: form.access_level?.value || 'basic',
-                default_duration_sec: defaultDurationSec,
-                color_mode: form.color_mode.value,
-                default_intensity: parseInt(form.default_intensity.value),
-                media_type: mediaType,
-                enable_corto: enableCorto,
-                enable_mediano: enableMediano,
-                enable_largo: enableLargo,
-                duration_labels: form.duration_labels.value || null
-            };
-
             try {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="loading-spinner"></span> Creando...';
+                }
+                
+                // Determine media type based on uploaded files
+                let mediaType = 'audio';
+                const hasAudio = wizardFiles.corto || wizardFiles.mediano || wizardFiles.largo;
+                const hasVideo = wizardFiles.video;
+                
+                if (hasAudio && hasVideo) mediaType = 'both';
+                else if (hasVideo) mediaType = 'video';
+                else mediaType = 'audio';
+
+                console.log("Determined media type:", mediaType);
+                
+                // Calculate default_duration_sec from MM:SS inputs
+                const durationMinElement = document.getElementById('createDurationMin');
+                const durationSecElement = document.getElementById('createDurationSec');
+                
+                const durationMin = durationMinElement ? (parseInt(durationMinElement.value) || 0) : 15;
+                const durationSec = durationSecElement ? (parseInt(durationSecElement.value) || 0) : 0;
+                const defaultDurationSec = (durationMin * 60) + durationSec;
+                
+                if (defaultDurationSec < 30) {
+                    showToast('La duración por defecto debe ser al menos 30 segundos', 'error');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '✅ Crear Terapia';
+                    }
+                    return;
+                }
+                
+                // Collect Duration Limits
+                const limitCortoEl = document.getElementById('wizardLimitCorto');
+                const limitMedianoEl = document.getElementById('wizardLimitMediano');
+                const limitLargoEl = document.getElementById('wizardLimitLargo');
+
+                const durationCortoSec = (limitCortoEl ? parseInt(limitCortoEl.value || 5) : 5) * 60;
+                const durationMedianoSec = (limitMedianoEl ? parseInt(limitMedianoEl.value || 20) : 20) * 60;
+                const durationLargoSec = (limitLargoEl ? parseInt(limitLargoEl.value || 180) : 180) * 60;
+
+                const data = {
+                    name: form.name.value,
+                    description: form.description.value || null,
+                    category: form.category.value || null,
+                    access_level: form.access_level?.value || 'basic',
+                    default_duration_sec: defaultDurationSec,
+                    color_mode: form.color_mode.value,
+                    default_intensity: parseInt(form.default_intensity.value),
+                    media_type: mediaType,
+                    // Duration Limits
+                    duration_corto_sec: durationCortoSec,
+                    duration_mediano_sec: durationMedianoSec,
+                    duration_largo_sec: durationLargoSec,
+                    enable_corto: true, 
+                    enable_mediano: true,
+                    enable_largo: true,
+                    is_active: true
+                };
+
+                console.log("Creating therapy data:", data);
+
+                // 1. Create Therapy
                 const response = await apiCall('/api/therapies', {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
                 
+                if(!response || !response.id) throw new Error("API no retornó ID");
+
+                const therapyId = response.id;
                 showToast('Terapia creada exitosamente', 'success');
+                
+                // 2. Upload Files sequentially
+                if (submitBtn) submitBtn.innerHTML = '<span class="loading-spinner"></span> Subiendo archivos...';
+                
+                // Upload Queue
+                const uploads = [];
+                if (wizardFiles.corto) uploads.push({ type: 'audio', durationType: 'corto', file: wizardFiles.corto });
+                if (wizardFiles.mediano) uploads.push({ type: 'audio', durationType: 'mediano', file: wizardFiles.mediano });
+                if (wizardFiles.largo) uploads.push({ type: 'audio', durationType: 'largo', file: wizardFiles.largo });
+                if (wizardFiles.video) uploads.push({ type: 'video', file: wizardFiles.video });
+
+                let uploadErrors = 0;
+                
+                for (const item of uploads) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', item.file);
+                        
+                        // Construct URL based on type
+                        let uploadUrl = `${API_URL}/api/therapies/${therapyId}`;
+                        if (item.type === 'audio') {
+                            uploadUrl += `/audio/${item.durationType}`;
+                        } else {
+                            uploadUrl += `/video`;
+                        }
+                        
+                        console.log(`Uploading ${item.type} ${item.durationType || ''} to ${uploadUrl}`);
+                        
+                        const uploadRes = await fetch(uploadUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: formData
+                        });
+                        
+                        if (!uploadRes.ok) throw new Error(`Status ${uploadRes.status}`);
+                    } catch (err) {
+                        console.error(err);
+                        uploadErrors++;
+                        showToast(`Error al subir ${item.type} ${item.durationType || ''}`, 'warning');
+                    }
+                }
+                
+                if (uploadErrors === 0 && uploads.length > 0) {
+                    showToast('Todos los archivos subidos correctamente', 'success');
+                } else if (uploads.length > 0) {
+                    showToast(`Se crearon con ${uploadErrors} errores de subida`, 'warning');
+                }
+                
                 closeModal('createTherapy');
-                form.reset();
-                
-                // Abrir modal de subida de archivos
-                openUploadMediaModal(response.id, response.name, mediaType, { enableCorto, enableMediano, enableLargo });
-                
+                resetWizard();
                 loadTherapies();
-                loadDashboardData();
+                
             } catch (error) {
-                showToast(error.message, 'error');
+                console.error("Submit Error:", error);
+                showToast(error.message || 'Error al crear terapia', 'error');
+                // Fallback alert for debugging
+                alert("Error al crear terapia: " + (error.message || error));
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '✅ Crear Terapia';
+                }
             }
         });
 
@@ -2846,6 +3674,8 @@
                 await loadTherapyFormOptions(); // Cargar categorías y modos de luz
                 const therapy = await apiCall(`/api/therapies/${therapyId}`);
                 
+                if (typeof initEditTabs === 'function') initEditTabs();
+                
                 document.getElementById('editTherapyId').value = therapy.id;
                 const idLabel = document.getElementById('editTherapyIdLabel');
                 if (idLabel) idLabel.textContent = therapy.id;
@@ -2875,29 +3705,56 @@
                     };
                 }
 
-                // Tipo de media guardado
+                // Tipo de media guardado - RADIO BUTTONS
                 const storedType = normalizeMediaType(therapy.media_type) || null;
                 const detectedType = detectTherapyMediaType(therapy);
-                const mediaSelect = document.getElementById('editTherapyMediaType');
-                const detectedPill = document.getElementById('editMediaDetectedPill');
-                const mismatchPill = document.getElementById('editMediaMismatchPill');
-                if (detectedPill) detectedPill.textContent = `Detectado: ${detectedType === 'unknown' ? '—' : detectedType}`;
-                const mismatch = storedType && detectedType !== 'unknown' && storedType !== detectedType;
-                if (mismatchPill) mismatchPill.style.display = mismatch ? 'inline-flex' : 'none';
-                if (mediaSelect) {
-                    mediaSelect.value = storedType || (detectedType === 'unknown' ? 'audio' : detectedType);
-                    mediaSelect.onchange = () => {
-                        applyEditTherapyMediaTypeUI(mediaSelect.value);
-                        const hint = document.getElementById('editMediaTypeHint');
-                        if (hint) hint.textContent = 'Tipo guardado actualizado (pendiente de Guardar cambios).';
-                        if (mismatchPill) mismatchPill.style.display = 'none';
-                    };
+                
+                // Check correct radio button
+                const typeToSelect = storedType || (detectedType === 'unknown' ? 'audio' : detectedType);
+                const radio = document.querySelector(`input[name="media_type"][value="${typeToSelect}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    // Add listener to update UI when changed
+                    document.querySelectorAll('input[name="media_type"]').forEach(r => {
+                        r.addEventListener('change', (e) => {
+                            applyEditTherapyMediaTypeUI(e.target.value);
+                        });
+                    });
+                    // Initial apply
+                    applyEditTherapyMediaTypeUI(typeToSelect);
                 }
                 
+                const detectedPill = document.getElementById('editMediaDetectedPill');
+                if (detectedPill) detectedPill.textContent = `Detectado: ${detectedType === 'unknown' ? '—' : detectedType}`;
+
                 // Intensidad
                 const intensity = therapy.default_intensity || 50;
                 document.getElementById('editTherapyIntensity').value = intensity;
                 document.getElementById('editIntensityValue').textContent = intensity;
+                
+                // Duration setup for MM:SS
+                const minInput = document.getElementById('editDurationMin');
+                const secInput = document.getElementById('editDurationSec');
+                const preview = document.getElementById('editDurationPreview');
+                
+                // Calculate initial MM:SS from default_duration_sec
+                const totalSec = therapy.default_duration_sec || 0;
+                const mins = Math.floor(totalSec / 60);
+                const secs = totalSec % 60;
+                
+                if (minInput) minInput.value = mins;
+                if (secInput) secInput.value = secs;
+                if (preview) preview.textContent = `= ${mins}:${String(secs).padStart(2, '0')}`;
+                
+                // Add listeners for live update in Edit modal
+                const updateEditPreview = () => {
+                    const m = parseInt(minInput.value) || 0;
+                    const s = parseInt(secInput.value) || 0;
+                    const t = (m * 60) + s;
+                    preview.textContent = `= ${m}:${String(s).padStart(2, '0')}`;
+                };
+                if (minInput) minInput.addEventListener('input', updateEditPreview);
+                if (secInput) secInput.addEventListener('input', updateEditPreview);
                 
                 // Duraciones (límites por tipo)
                 document.getElementById('editDurationCorto').value = Math.floor((therapy.duration_corto_sec || 300) / 60);
