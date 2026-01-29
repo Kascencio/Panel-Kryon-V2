@@ -292,24 +292,27 @@ function getDurationTypeFromSeconds(seconds) {
  * @returns {Object} { audioUrl, maxDuration, label }
  */
 function getAudioForDuration(therapy, durationType) {
-    const limits = DURATION_LIMITS[durationType] || DURATION_LIMITS.corto;
+    const limits = DURATION_LIMITS[durationType] || DURATION_LIMITS.mediano;
+    
+    // Use therapy.default_duration_sec as the primary source if available
+    const defaultDur = therapy.default_duration_sec || null;
     
     const config = {
         corto: {
             audioUrl: therapy.audio_corto_url,
-            maxDuration: Math.min(therapy.duration_corto_sec || 300, limits.max),
+            maxDuration: defaultDur || therapy.duration_corto_sec || 300,
         },
         mediano: {
             audioUrl: therapy.audio_mediano_url,
-            maxDuration: Math.min(therapy.duration_mediano_sec || 1200, limits.max),
+            maxDuration: defaultDur || therapy.duration_mediano_sec || 900,
         },
         largo: {
             audioUrl: therapy.audio_largo_url,
-            maxDuration: Math.min(therapy.duration_largo_sec || 10800, limits.max),
+            maxDuration: defaultDur || therapy.duration_largo_sec || 1800,
         },
     };
     
-    const selected = config[durationType] || config.corto;
+    const selected = config[durationType] || config.mediano;
     return {
         ...selected,
         label: limits.label,

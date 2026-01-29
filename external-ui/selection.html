@@ -1287,7 +1287,7 @@
             customIntensity = selectedTherapy.default_intensity || 50;
             
             // Auto-detect duration type based on default_duration_sec
-            const defaultDuration = selectedTherapy.default_duration_sec || 300;
+            const defaultDuration = selectedTherapy.default_duration_sec || 900;
             customDurationType = (typeof KryonAPI !== 'undefined' && KryonAPI.getDurationTypeFromSeconds) 
                 ? KryonAPI.getDurationTypeFromSeconds(defaultDuration)
                 : getDurationTypeFromSecondsLocal(defaultDuration);
@@ -1510,7 +1510,7 @@
             const isVideoOnly = hasVideo && !hasAnyAudio;
             
             // Determine duration type based on default_duration_sec
-            const defaultDuration = selectedTherapy.default_duration_sec || 300;
+            const defaultDuration = selectedTherapy.default_duration_sec || 900;
             
             // Use API function if available, otherwise use local fallback
             const durationType = (typeof KryonAPI !== 'undefined' && KryonAPI.getDurationTypeFromSeconds) 
@@ -1521,12 +1521,17 @@
             console.log('[Quick Start] Default Duration:', defaultDuration, 'seconds');
             console.log('[Quick Start] Detected Type:', durationType);
             
-            // Use default settings with correct duration
+            // Get audio URL for the duration type, but USE default_duration_sec as maxDuration
             const audioConfig = hasAnyAudio 
                 ? KryonAPI.getAudioForDuration(selectedTherapy, durationType)
                 : { audioUrl: null, maxDuration: defaultDuration };
             
+            // CRITICAL FIX: Override maxDuration with the actual default_duration_sec
+            // This ensures the therapy uses the configured duration, not the type limit
+            const actualMaxDuration = defaultDuration;
+            
             console.log('[Quick Start] Audio Config:', audioConfig);
+            console.log('[Quick Start] Using Max Duration:', actualMaxDuration);
             
             const sessionConfig = {
                 ...selectedTherapy,
@@ -1534,7 +1539,7 @@
                     durationType: isVideoOnly ? 'video' : durationType,
                     lightMode: 'general', // Default: Patrón Complejo
                     intensity: selectedTherapy.default_intensity || 50,
-                    maxDuration: audioConfig.maxDuration,
+                    maxDuration: actualMaxDuration, // USE default_duration_sec
                     audioUrl: audioConfig.audioUrl,
                     playVideo: isVideoOnly, // Auto-play video if video-only
                     videoOnly: isVideoOnly,
