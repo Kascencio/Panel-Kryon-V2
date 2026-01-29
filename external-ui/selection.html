@@ -1139,18 +1139,28 @@
         }
 
         function getTherapyDurationLabel(t) {
-            // Collect available durations
+            // PRIORITY: Use default_duration_sec if available
+            if (t.default_duration_sec && t.default_duration_sec > 0) {
+                const sec = t.default_duration_sec;
+                const mins = Math.floor(sec / 60);
+                const secs = sec % 60;
+                // Show MM:SS format if seconds > 0, otherwise just minutes
+                if (secs > 0) {
+                    return `${mins}:${String(secs).padStart(2, '0')}`;
+                }
+                return `${mins} min`;
+            }
+            
+            // Fallback: Calculate from audio files if no default_duration_sec
             const durations = [];
             if (t.audio_corto_url) durations.push(t.duration_corto_sec || 300);
-            if (t.audio_mediano_url) durations.push(t.duration_mediano_sec || 1200);
-            if (t.audio_largo_url) durations.push(t.duration_largo_sec || 3600);
+            if (t.audio_mediano_url) durations.push(t.duration_mediano_sec || 900);
+            if (t.audio_largo_url) durations.push(t.duration_largo_sec || 1800);
             
-            // If video-only, use default duration
+            // If video-only, use 15 min default
             if (durations.length === 0) {
                 if (t.video_url || t.video_path) {
-                    const sec = t.default_duration_sec || 600;
-                    const mins = Math.floor(sec / 60);
-                    return `${mins} min`;
+                    return '15 min';
                 }
                 return '--';
             }
@@ -1456,10 +1466,15 @@
                 return;
             }
             
-            // Get audio config for selected duration (may be null for video-only)
+            // Get audio URL for selected duration type (may be null for video-only)
             const audioConfig = hasAnyAudio 
                 ? KryonAPI.getAudioForDuration(selectedTherapy, customDurationType)
-                : { audioUrl: null, maxDuration: selectedTherapy.default_duration_sec || 600 };
+                : { audioUrl: null };
+            
+            // CRITICAL: Use default_duration_sec as the actual duration (not type limits)
+            const actualDuration = selectedTherapy.default_duration_sec || 900;
+            
+            console.log('[Customized] Using duration:', actualDuration, 'seconds');
             
             // Create session config
             const sessionConfig = {
@@ -1469,7 +1484,7 @@
                     durationType: hasAnyAudio ? customDurationType : 'video',
                     lightMode: customLightMode || 'general', // Default: Patrón Complejo
                     intensity: customIntensity,
-                    maxDuration: audioConfig.maxDuration,
+                    maxDuration: actualDuration, // USE default_duration_sec, not type limits
                     audioUrl: audioConfig.audioUrl,
                     playVideo: customPlayVideo || (!hasAnyAudio && hasVideo), // Force video if no audio
                     videoOnly: !hasAnyAudio && hasVideo,
