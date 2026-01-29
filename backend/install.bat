@@ -8,7 +8,7 @@ echo ===================================================
 cd /d "%~dp0"
 
 REM ---------------------------------------------------
-REM 1. CHECK & INSTALL VISUAL C++ BUILD TOOLS
+REM 1. CHECK & INSTALL VISUAL C++ BUILD TOOLS + SDK
 REM ---------------------------------------------------
 echo.
 echo [1/4] Checking Visual C++ Build Tools...
@@ -27,14 +27,14 @@ if exist "!VSWHERE!" (
 
 if "!NEED_CPP!"=="1" (
     echo    - C++ Build Tools not detected.
-    echo    - Downloading and installing Visual C++ Build Tools...
+    echo    - Downloading and installing Visual C++ Build Tools + Windows SDK...
     echo    - This may take a while ^(1-2 GB download^). Please wait...
     
     REM Download vs_buildtools.exe
     powershell -Command "Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_buildtools.exe' -OutFile 'vs_buildtools.exe'"
     
-    REM Install silently
-    start /wait vs_buildtools.exe --passive --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --norestart
+    REM Install silently with VCTools AND Windows 10 SDK
+    start /wait vs_buildtools.exe --passive --wait --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --includeRecommended --norestart
     
     echo    - Visual C++ Build Tools installation finished.
     if exist vs_buildtools.exe del vs_buildtools.exe
@@ -70,35 +70,59 @@ if %errorlevel% neq 0 (
     echo    - Rust installed.
     if exist rustup-init.exe del rustup-init.exe
     
-    REM Update PATH for current session manually since refreshenv doesn't work well in batch
+    REM Update PATH for current session manually
     set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
 ) else (
     echo    - Rust is already installed.
 )
 
 REM ---------------------------------------------------
-REM 3. CHECK & INSTALL PYTHON
+REM 3. CHECK & INSTALL PYTHON 3.12 SPECIFICALLY
 REM ---------------------------------------------------
 echo.
-echo [3/4] Checking Python...
+echo [3/4] Checking Python 3.12...
 
-where python >nul 2>nul
-if %errorlevel% neq 0 (
-    echo    - Python not found.
-    echo    - Downloading Python 3.12 installer...
-    
-    REM Download Python installer
-    powershell -Command "Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.12.1/python-3.12.1-amd64.exe' -OutFile 'python_installer.exe'"
-    
-    REM Install silently
-    echo    - Installing Python...
-    start /wait python_installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
-    
-    echo    - Python installed.
-    if exist python_installer.exe del python_installer.exe
-) else (
-    echo    - Python is already installed.
+set "PYTHON_CMD="
+
+REM Check if py launcher exists and can find 3.12
+py -3.12 --version >nul 2>nul
+if %errorlevel% equ 0 (
+    set "PYTHON_CMD=py -3.12"
+    echo    - Python 3.12 found via py launcher.
+    goto :python_ready
 )
+
+REM Check for python3.12 in path
+where python3.12 >nul 2>nul
+if %errorlevel% equ 0 (
+    set "PYTHON_CMD=python3.12"
+    echo    - Python 3.12 found in PATH.
+    goto :python_ready
+)
+
+REM Check default python and verify version
+for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "PY_VER=%%v"
+echo !PY_VER! | findstr /b "3.12" >nul
+if %errorlevel% equ 0 (
+    set "PYTHON_CMD=python"
+    echo    - Python 3.12 is the default python.
+    goto :python_ready
+)
+
+REM Python 3.12 not found, install it
+echo    - Python 3.12 not found. Downloading...
+powershell -Command "Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.12.1/python-3.12.1-amd64.exe' -OutFile 'python_installer.exe'"
+
+echo    - Installing Python 3.12...
+start /wait python_installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+
+echo    - Python 3.12 installed.
+if exist python_installer.exe del python_installer.exe
+
+REM After install, use py launcher
+set "PYTHON_CMD=py -3.12"
+
+:python_ready
 
 REM ---------------------------------------------------
 REM 4. SETUP VENV AND INSTALL DEPENDENCIES
@@ -106,21 +130,29 @@ REM ---------------------------------------------------
 echo.
 echo [4/4] Setting up Project Environment...
 
-REM Activate C++ Build Tools Environment if found (Crucial for compiling wheels like pydantic-core)
+REM Activate C++ Build Tools Environment if found
 if defined VS_PATH (
     if exist "!VS_PATH!\VC\Auxiliary\Build\vcvars64.bat" (
         echo    - Initializing Visual C++ Environment...
         call "!VS_PATH!\VC\Auxiliary\Build\vcvars64.bat" >nul
-    ) else (
-        echo [WARNING] vcvars64.bat not found. Compilation might fail.
+    )
+)
+
+REM Delete old venv if using wrong Python version
+if exist venv (
+    echo    - Checking existing venv Python version...
+    venv\Scripts\python --version 2>nul | findstr "3.12" >nul
+    if !errorlevel! neq 0 (
+        echo    - Existing venv uses wrong Python version. Recreating...
+        rmdir /s /q venv
     )
 )
 
 if not exist venv (
-    echo    - Creating virtual environment 'venv'...
-    python -m venv venv
+    echo    - Creating virtual environment with Python 3.12...
+    !PYTHON_CMD! -m venv venv
 ) else (
-    echo    - Virtual environment 'venv' already exists.
+    echo    - Virtual environment 'venv' already exists with correct Python.
 )
 
 echo    - Activating venv...
@@ -131,6 +163,14 @@ python -m pip install --upgrade pip
 
 echo    - Installing requirements...
 pip install -r requirements.txt
+
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Failed to install requirements!
+    echo Please ensure Visual C++ Build Tools and Windows SDK are installed correctly.
+    pause
+    exit /b 1
+)
 
 REM Optional: Initialize DB
 if exist reset_db.py (
