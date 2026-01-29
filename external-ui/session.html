@@ -2556,14 +2556,37 @@
             audioPlayer.addEventListener('canplaythrough', () => {
                 console.log('[Audio] Ready:', audioPlayer.src);
             });
+            
+            // NEW: Detect audio duration when metadata loads
+            audioPlayer.addEventListener('loadedmetadata', () => {
+                if (audioPlayer.duration && isFinite(audioPlayer.duration)) {
+                    const audioDurationSec = Math.floor(audioPlayer.duration);
+                    console.log('[Audio] Duration detected:', audioDurationSec, 'seconds (' + formatTime(audioDurationSec) + ')');
+                    
+                    // Use audio duration as the therapy duration (override totalSeconds)
+                    if (audioDurationSec > 0 && totalSeconds === 0) {
+                        totalSeconds = audioDurationSec;
+                        updateTimerDisplay();
+                        console.log('[Audio] Using audio duration as therapy time');
+                    }
+                    
+                    // If audio is shorter than configured time, adjust to audio length
+                    if (audioDurationSec > 0 && audioDurationSec < totalSeconds) {
+                        console.log(`[Audio] Audio (${formatTime(audioDurationSec)}) is shorter than configured (${formatTime(totalSeconds)}), adjusting...`);
+                        totalSeconds = audioDurationSec;
+                        updateTimerDisplay();
+                    }
+                }
+            });
+            
             audioPlayer.addEventListener('error', (e) => {
                 console.error('[Audio] Error:', audioPlayer.src, e);
             });
+            
+            // MODIFIED: Stop therapy when audio ends (don't loop)
             audioPlayer.addEventListener('ended', () => {
-                if (elapsedSeconds < totalSeconds && audioPlayer.src) {
-                    audioPlayer.currentTime = 0;
-                    audioPlayer.play().catch(() => {});
-                }
+                console.log('[Audio] Playback ended - stopping therapy');
+                onMaxTimeReached(); // Stop the therapy session
             });
             
             // Keyboard shortcuts
