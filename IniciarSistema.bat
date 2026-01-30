@@ -61,10 +61,10 @@ goto :END
 :START_APPS
 echo.
 echo [1/3] Preparando Backend...
-call :KillPort 8000
+call :KillPortPS 8000
 
 echo [2/3] Preparando Frontend...
-call :KillPort 5173
+call :KillPortPS 5173
 
 echo [3/3] Iniciando servicios...
 echo.
@@ -150,13 +150,15 @@ sc query "Apache2.4" >nul 2>nul && (
 )
 goto :eof
 
-:KillPort
+:KillPortPS
 set "KP=%~1"
-for /f "tokens=5" %%a in ('netstat -aon ^| find ":%KP%" ^| find "LISTENING" 2^>nul') do (
-  echo   Matando proceso en puerto %KP% (PID %%a)...
-  taskkill /F /PID %%a >nul 2>nul
-)
-goto :eof
+echo   Verificando puerto %KP%...
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$p = Get-NetTCPConnection -LocalPort %KP% -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; " ^
+  "if($p){ $p | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Host '   Matado(s) PID:' ($p -join ', ') } else { Write-Host '   Puerto libre.' }"
+exit /b
+
 
 :END
 echo.
