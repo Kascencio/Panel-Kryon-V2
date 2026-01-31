@@ -170,6 +170,30 @@ El script eliminará todas las tablas, las recreará y ejecutará el seed inicia
 
 > **⚠️ Advertencia:** Este comando borra todos los datos existentes. Úsalo solo en desarrollo.
 
+**e) Migrar terapias desde USB (opcional):**
+
+Si tienes un USB con terapias pre-configuradas (audio/video), puedes importarlas automáticamente:
+
+**En Windows:**
+```powershell
+# Ejecutar MigrarTerapias.bat desde el USB
+E:\panel-kryon\MigrarTerapias.bat
+```
+
+**En macOS/Linux:**
+```bash
+cd backend
+source venv/bin/activate
+python migrar_terapias.py --usb /Volumes/USB/panel-kryon
+```
+
+El script:
+- Copia los archivos de audio/video a `backend/media/`
+- Registra las terapias en la base de datos
+- Omite terapias que ya existen
+
+> **💡 Tip:** Usa `--dry-run` para ver qué se haría sin ejecutar cambios.
+
 #### 3. Iniciar el Backend
 
 **Opción A: Usando el script de inicio (recomendado):**
