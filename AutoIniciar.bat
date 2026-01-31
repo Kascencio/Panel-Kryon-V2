@@ -12,9 +12,7 @@ REM ===================================================
 
 REM ========= CONFIGURACIÓN =========
 set "PANEL_PATH=C:\Panel-Kryon-V2"
-set "BACKEND_URL=http://localhost:8000/health"
-set "WAIT_MAX=60"
-set "WAIT_STEP=3"
+set "WAIT_BACKEND=20"
 REM =================================
 
 REM Esperar un poco para que Windows cargue completamente
@@ -43,20 +41,15 @@ call :KillPortPS 5173
 echo.
 echo [2/3] Iniciando Backend...
 pushd "%PANEL_PATH%\backend"
-start /min "Panel Kryon - Backend" cmd /c "call venv\Scripts\activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+start /min "Panel Kryon - Backend" cmd /k "call venv\Scripts\activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
 popd
 
-echo   Esperando que el Backend inicie...
-call :WaitForBackend %WAIT_MAX% %WAIT_STEP%
-if "!BACKEND_OK!"=="0" (
-    echo [X] El Backend no respondio. Revisa los logs.
-    pause
-    exit /b 1
-)
+echo   Esperando %WAIT_BACKEND% segundos para que el Backend inicie...
+timeout /t %WAIT_BACKEND% /nobreak >nul
 
 echo.
 echo [3/3] Iniciando Frontend...
-start /min "Panel Kryon - Frontend" cmd /c "python -m http.server 5173 --directory %PANEL_PATH%\external-ui"
+start /min "Panel Kryon - Frontend" cmd /k "cd /d %PANEL_PATH%\external-ui && python -m http.server 5173"
 
 echo.
 echo   Esperando 3 segundos...
@@ -80,31 +73,6 @@ exit /b 0
 
 
 REM ================= FUNCIONES =================
-
-:WaitForBackend
-set /a "MAX=%~1"
-set /a "STEP=%~2"
-set /a "ELAPSED=0"
-set "BACKEND_OK=0"
-
-:WAIT_LOOP
-curl -s -o nul -w "" "%BACKEND_URL%" >nul 2>&1
-if !ERRORLEVEL! EQU 0 (
-    set "BACKEND_OK=1"
-    echo   Backend listo.
-    goto :eof
-)
-
-if !ELAPSED! GEQ !MAX! (
-    echo   Timeout esperando Backend.
-    goto :eof
-)
-
-echo   Esperando... !ELAPSED!/!MAX! seg
-timeout /t !STEP! /nobreak >nul
-set /a "ELAPSED+=STEP"
-goto :WAIT_LOOP
-
 
 :KillPortPS
 set "PORT=%~1"
