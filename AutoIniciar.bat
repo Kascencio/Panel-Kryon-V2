@@ -41,7 +41,7 @@ call :KillPortPS 5173
 echo.
 echo [2/3] Iniciando Backend...
 pushd "%PANEL_PATH%\backend"
-start /min "Panel Kryon - Backend" cmd /k "call venv\Scripts\activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+start /min "Panel Kryon - Backend" cmd /k "venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
 popd
 
 echo   Esperando %WAIT_BACKEND% segundos para que el Backend inicie...
