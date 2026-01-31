@@ -155,13 +155,41 @@ INITIAL_SUPERADMIN_NAME=Super Admin
 
 > **⚠️ Importante:** En producción, cambia `SECRET_KEY` y las credenciales del superadmin.
 
+**Usar USB para archivos de media (opcional):**
+
+Si deseas que los archivos de audio/video estén en un USB externo en lugar de la carpeta local, cambia `MEDIA_DIR` en el archivo `.env`:
+
+```bash
+# Local (por defecto):
+MEDIA_DIR=./media
+
+# USB en Windows (ejemplo letra E:):
+MEDIA_DIR=E:\panel-kryon\media
+
+# USB en macOS:
+MEDIA_DIR=/Volumes/USB/panel-kryon/media
+```
+
+> **⚠️ Nota:** El USB debe estar conectado antes de iniciar el backend. Usa siempre la misma letra de unidad en Windows.
+
 **d) Resetear la base de datos (opcional):**
 
 Para formatear la base de datos y volver a ejecutar el seed inicial:
 
+**En macOS/Linux:**
 ```bash
 cd backend
 source venv/bin/activate
+python reset_db.py
+```
+
+**En Windows:**
+```powershell
+# Si recibes error de seguridad, ejecuta primero:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+cd backend
+.\venv\Scripts\Activate.ps1
 python reset_db.py
 ```
 
@@ -171,20 +199,36 @@ El script eliminará todas las tablas, las recreará y ejecutará el seed inicia
 
 **e) Migrar terapias desde USB (opcional):**
 
-Si tienes un USB con terapias pre-configuradas (audio/video), puedes importarlas automáticamente:
+Si tienes un USB con terapias pre-configuradas (audio/video), puedes importarlas a una instalación fresca.
 
-**En Windows:**
-```powershell
-# Ejecutar MigrarTerapias.bat desde el USB
+> ⚠️ **Importante:** La migración se ejecuta **desde el sistema donde está instalado Panel Kryon**, apuntando al USB.
+
+**Opción 1 - Windows (más fácil):**
+
+Conecta el USB y ejecuta `MigrarTerapias.bat` con doble clic:
+```
 E:\panel-kryon\MigrarTerapias.bat
 ```
+El script detecta automáticamente dónde está instalado Panel Kryon.
 
-**En macOS/Linux:**
-```bash
-cd backend
-source venv/bin/activate
-python migrar_terapias.py --usb /Volumes/USB/panel-kryon
-```
+**Opción 2 - Manual (cualquier OS):**
+
+1. Conecta el USB
+2. Abre terminal en la carpeta `backend` del sistema:
+   ```bash
+   cd C:\Panel-Kryon-V2\backend   # Windows
+   cd /path/to/panel-kryon/backend  # macOS/Linux
+   ```
+3. Activa el entorno virtual:
+   ```bash
+   .\venv\Scripts\Activate.ps1   # Windows PowerShell
+   source venv/bin/activate       # macOS/Linux
+   ```
+4. Ejecuta la migración apuntando al USB:
+   ```bash
+   python migrar_terapias.py --usb E:\panel-kryon       # Windows
+   python migrar_terapias.py --usb /Volumes/USB/panel-kryon  # macOS
+   ```
 
 El script:
 - Copia los archivos de audio/video a `backend/media/`
@@ -192,6 +236,22 @@ El script:
 - Omite terapias que ya existen
 
 > **💡 Tip:** Usa `--dry-run` para ver qué se haría sin ejecutar cambios.
+
+**f) Auto-iniciar con Windows (opcional):**
+
+Para que Panel Kryon se inicie automáticamente cuando enciendas la computadora:
+
+1. Presiona **Win + R**, escribe `shell:startup` y presiona Enter
+2. Copia el archivo `AutoIniciar.bat` a esa carpeta
+3. Edita `AutoIniciar.bat` y verifica que la ruta sea correcta:
+   ```batch
+   set "PANEL_PATH=C:\Panel-Kryon-V2"
+   ```
+
+El script:
+- Espera a que Windows cargue completamente
+- Inicia backend y frontend minimizados
+- Abre el navegador en la página de login
 
 #### 3. Iniciar el Backend
 
