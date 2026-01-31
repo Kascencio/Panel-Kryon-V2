@@ -5,10 +5,9 @@ REM ===================================================
 REM  PANEL KRYON - AUTO-INICIO CON WINDOWS
 REM ===================================================
 REM  Coloca este archivo en:
-REM  C:\Users\[TuUsuario]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+REM  C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
 REM  
-REM  O ejecuta: shell:startup  (en Ejecutar o Win+R)
-REM  y copia este archivo ahí.
+REM  El proyecto debe estar en: C:\Panel-Kryon-V2
 REM ===================================================
 
 REM ========= CONFIGURACIÓN =========

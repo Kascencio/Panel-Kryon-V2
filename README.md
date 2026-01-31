@@ -242,9 +242,11 @@ El script:
 
 Para que Panel Kryon se inicie automáticamente cuando enciendas la computadora:
 
-1. Presiona **Win + R**, escribe `shell:startup` y presiona Enter
-2. Copia el archivo `AutoIniciar.bat` a esa carpeta
-3. Edita `AutoIniciar.bat` y verifica que la ruta sea correcta:
+1. Copia el archivo `AutoIniciar.bat` a:
+   ```
+   C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
+   ```
+2. Verifica que la ruta del proyecto sea correcta en `AutoIniciar.bat`:
    ```batch
    set "PANEL_PATH=C:\Panel-Kryon-V2"
    ```
