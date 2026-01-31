@@ -329,6 +329,28 @@ El repositorio incluye un `env.example` como base para variables de entorno. 【
 ### 4.3 Base de datos
 Se usa **SQLAlchemy** con un `engine` creado desde `DATABASE_URL` y `SessionLocal` como session factory. `get_db()` es la dependencia estándar para inyectar la sesión en los endpoints. 【F:backend/app/db.py†L1-L21】
 
+#### Soporte Multi-Base de Datos
+
+El sistema soporta **SQLite**, **MySQL** y **PostgreSQL** de forma intercambiable. Solo necesitas cambiar la variable `DATABASE_URL` en el archivo `.env`:
+
+```bash
+# SQLite (desarrollo local, sin servidor - RECOMENDADO para desarrollo)
+DATABASE_URL=sqlite:///./panel_kryon.db
+
+# MySQL (XAMPP u otro servidor MySQL)
+DATABASE_URL=mysql+pymysql://root:@127.0.0.1:3306/panel_kryon?charset=utf8mb4
+
+# PostgreSQL (producción)
+DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/panel_kryon
+```
+
+**Notas:**
+- **SQLite**: Incluido con Python, no requiere instalación adicional. Ideal para desarrollo local.
+- **MySQL**: Requiere `PyMySQL` (ya incluido en `requirements.txt`).
+- **PostgreSQL**: Requiere `psycopg2-binary` (ya incluido en `requirements.txt`).
+
+Después de cambiar la URL, ejecuta `python reset_db.py` para inicializar la nueva base de datos.
+
 ### 4.4 Modelos (tablas principales)
 Los modelos representan el dominio de usuarios, planes, terapias, créditos, sesiones y analítica:
 
