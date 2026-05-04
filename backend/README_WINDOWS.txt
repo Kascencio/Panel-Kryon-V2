@@ -5,6 +5,7 @@
 REQUIREMENTS:
 - Internet connection (for downloading dependencies)
 - Windows 10 or 11 recommended
+- Python 3.11.x validated for the backend
 
 -------------------------------------------------------------------------
 1. AUTO-INSTALLATION

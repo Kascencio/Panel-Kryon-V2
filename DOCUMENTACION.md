@@ -26,7 +26,7 @@ Si usas Windows, antes de instalar las dependencias de Python, asegúrate de ten
 > Estos requisitos son necesarios para compilar extensiones nativas de algunos paquetes de Python (como pydantic-core). Si no los tienes, la instalación de dependencias puede fallar con errores sobre 'link.exe', Visual Studio, Rust o Cargo.
 
 **Software requerido:**
-- **Python 3.9+** (para el backend FastAPI)
+- **Python 3.11.x** (para el backend FastAPI; es la versión con la que funciona el sistema)
 - **Node.js y npm** (opcional, solo si se desea usar un servidor estático más avanzado)
 - **SQLite** (incluido con Python, se usa por defecto) o **PostgreSQL** (opcional, para producción)
 
