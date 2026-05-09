@@ -22,6 +22,8 @@ const ArduinoSerial = (() => {
     let connectionState = 'disconnected'; // disconnected, connecting, connected, error
     let lastSentIntensity = -1; // Track last sent value to avoid duplicates
     let intensityDebounceTimer = null;
+    let lastMode = 'general';       // Último modo enviado al Arduino
+    let lastModeIntensity = null;   // Última intensidad enviada con el modo
     
     // Storage key for remembered device
     const STORAGE_KEY = 'arduino_device_info';
@@ -32,6 +34,7 @@ const ArduinoSerial = (() => {
         data: [],
         error: [],
         stateChange: [],
+        status: [],
     };
     
     // ─────────────────────────────────────────────────────
@@ -264,6 +267,9 @@ const ArduinoSerial = (() => {
         if (!port) return;
         
         try {
+            // Apagar LEDs antes de cerrar el puerto
+            try { if (writer) await writer.write('stop\n'); } catch (_) {}
+
             readLoopRunning = false;
             
             if (reader) {
@@ -379,9 +385,27 @@ const ArduinoSerial = (() => {
      * @param {number} intensity - Intensidad 0-100 (opcional)
      */
     async function startMode(mode, intensity = null) {
-        const cmd = intensity !== null 
-            ? `inicio:${mode},${intensity}` 
-            : `inicio:${mode}`;
+        // Sanitizar modo: si es undefined/null/vacío, usar 'general'
+        const safeMode = (mode && typeof mode === 'string' && mode.trim())
+            ? mapColorToMode(mode.trim())
+            : 'general';
+
+        // Sanitizar intensidad: si no es un número válido, no enviar (Arduino usa el valor previo)
+        let safeIntensity = null;
+        if (intensity !== null && intensity !== undefined) {
+            const parsed = parseInt(intensity, 10);
+            if (!isNaN(parsed)) {
+                safeIntensity = Math.max(0, Math.min(100, parsed));
+            }
+        }
+
+        // Guardar para poder reanudar con el mismo modo
+        lastMode = safeMode;
+        lastModeIntensity = safeIntensity;
+
+        const cmd = safeIntensity !== null
+            ? `inicio:${safeMode},${safeIntensity}`
+            : `inicio:${safeMode}`;
         return send(cmd);
     }
     
@@ -483,8 +507,8 @@ const ArduinoSerial = (() => {
     }
     
     async function resumeTherapy() {
-        // Reiniciar el último modo
-        return startMode('general', currentIntensity);
+        // Reiniciar con el último modo y la intensidad actual
+        return startMode(lastMode, currentIntensity);
     }
     
     /**
@@ -630,6 +654,9 @@ const ArduinoSerial = (() => {
         // Intensity
         getIntensity,
         setIntensity,
+
+        // Último modo activo (lectura)
+        getLastMode: () => lastMode,
     };
 })();
 

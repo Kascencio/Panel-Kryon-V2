@@ -1720,10 +1720,7 @@
                     videoOnly: customization.videoOnly || false,
                 });
                 
-                // Start Arduino
-                if (arduinoConnected) {
-                    await ArduinoSerial.startMode(customization.lightMode, customization.intensity);
-                }
+                // Arduino se inicia desde play() para evitar doble comando
                 
             } catch (error) {
                 console.error('Error starting session:', error);
@@ -1881,6 +1878,12 @@
             startTimer();
             SessionChannel.Controller.play();
             startSyncInterval();
+
+            // Reanudar luces Arduino con el modo y la intensidad de la terapia
+            if (arduinoConnected && currentTherapy) {
+                const c = currentTherapy._activeCustomization;
+                if (c) ArduinoSerial.startMode(c.lightMode, c.intensity);
+            }
         }
         
         function pause() {
@@ -1927,6 +1930,12 @@
             if (!isPaused) {
                 if (audioPlayer.src) audioPlayer.play().catch(() => {});
                 if (videoPlayer.src) videoPlayer.play().catch(() => {});
+
+                // Reiniciar el patrón Arduino desde el inicio (paso 0, posición 0)
+                if (arduinoConnected && currentTherapy) {
+                    const c = currentTherapy._activeCustomization;
+                    if (c) ArduinoSerial.startMode(c.lightMode, c.intensity);
+                }
             }
         }
         
@@ -2315,6 +2324,15 @@
                     }
                 }
                 updateStatusUI();
+
+                // Si se reconectó durante una sesión activa, reiniciar las luces
+                if (arduinoConnected && isActive && !isPaused && currentTherapy) {
+                    const c = currentTherapy._activeCustomization;
+                    if (c) {
+                        console.log('[Arduino] Reconectado durante sesión activa, reiniciando luces...');
+                        ArduinoSerial.startMode(c.lightMode, c.intensity).catch(console.error);
+                    }
+                }
             });
             
             ArduinoSerial.on('disconnect', () => {
