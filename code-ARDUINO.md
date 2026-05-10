@@ -309,9 +309,9 @@ void setup(){
   for(uint8_t i=0;i<N_STRIPS;i++){ strip[i].begin(); strip[i].show(); }
   applyBrightness();
 
-  // Self-test inicial (no bloqueante): 10 s, luego APAGADO
-  startSelfTest();
-  Serial.println(">> Self-test inicial (10 s) en curso...");
+  // LEDs apagados al arrancar (self-test disponible con comando 'test')
+  clearAll();
+  Serial.println(">> Sistema listo. LEDs apagados.");
 }
 
 void loop(){
