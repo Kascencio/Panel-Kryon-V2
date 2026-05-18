@@ -1251,11 +1251,11 @@
             <div class="main-panel">
                 <!-- Área Visual -->
                 <div class="visual-area" id="visualArea">
-                    <video id="videoPlayer" loop muted class="hidden"></video>
+                    <video id="videoPlayer" loop class="hidden"></video>
                     
                     <!-- Video Preview Container (for video-only mode) - Monitor View -->
                     <div class="video-preview-container hidden" id="videoPreviewContainer">
-                        <video id="videoPreview" loop muted playsinline></video>
+                        <video id="videoPreview" loop playsinline></video>
                         <div class="video-preview-overlay">
                             <div class="video-preview-header">
                                 <div class="video-preview-badge">
@@ -1542,6 +1542,7 @@
         let micStream = null;
         let micAnalyser = null;
         let previousVolume = 80;
+        let preferStandaloneAudio = false;
         
         // ═══════════════════════════════════════════════════════
         // ELEMENTS
@@ -1558,6 +1559,24 @@
         const timeSlider = document.getElementById('timeSlider');
         const timeCurrentLabel = document.getElementById('timeCurrent');
         const timeTotalLabel = document.getElementById('timeTotal');
+
+        function applyMediaVolume() {
+            const vol = (parseInt(volumeSlider?.value || '80', 10) || 0) / 100;
+            const videoPreview = document.getElementById('videoPreview');
+
+            audioPlayer.volume = vol;
+            videoPlayer.volume = vol;
+            if (videoPreview) videoPreview.volume = vol;
+
+            if (preferStandaloneAudio) {
+                videoPlayer.muted = true;
+                if (videoPreview) videoPreview.muted = true;
+            } else {
+                const muted = vol <= 0;
+                videoPlayer.muted = muted;
+                if (videoPreview) videoPreview.muted = muted;
+            }
+        }
         
         // ═══════════════════════════════════════════════════════
         // INIT
@@ -1789,9 +1808,9 @@
                 const fullAudioUrl = KryonAPI.getMediaUrl(audioUrl);
                 console.log('[Session] Loading audio:', fullAudioUrl);
                 audioPlayer.src = fullAudioUrl;
-                audioPlayer.volume = volumeSlider.value / 100;
                 audioPlayer.load();
             }
+            preferStandaloneAudio = !!audioUrl;
             
             // Video
             const shouldPlayVideo = customization ? customization.playVideo : true;
@@ -1812,6 +1831,7 @@
                 document.getElementById('visualOverlay').classList.add('hidden');
                 document.getElementById('videoPreviewTitle').textContent = therapy.name;
             }
+            applyMediaVolume();
         }
         
         // Update video preview timer (called from main timer update)
@@ -2208,14 +2228,13 @@
         }
         
         function toggleMute() {
-            if (audioPlayer.volume > 0) {
+            if ((parseInt(volumeSlider.value, 10) || 0) > 0) {
                 previousVolume = volumeSlider.value;
                 volumeSlider.value = 0;
-                audioPlayer.volume = 0;
             } else {
                 volumeSlider.value = previousVolume;
-                audioPlayer.volume = previousVolume / 100;
             }
+            applyMediaVolume();
             document.getElementById('volumeValue').textContent = volumeSlider.value + '%';
             updateVolumeIcon(parseInt(volumeSlider.value));
         }
@@ -2527,7 +2546,7 @@
             // Volume
             volumeSlider.addEventListener('input', () => {
                 const vol = volumeSlider.value;
-                audioPlayer.volume = vol / 100;
+                applyMediaVolume();
                 document.getElementById('volumeValue').textContent = vol + '%';
                 updateVolumeIcon(parseInt(vol));
             });

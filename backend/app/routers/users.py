@@ -43,6 +43,12 @@ class AssignPlanRequest(BaseModel):
     plan_id: int
 
 
+class UpdateUserRequest(BaseModel):
+    name: str | None = None
+    password: str | None = None
+    is_active: bool | None = None
+
+
 # ──────────────────────────────────────────────────────────────
 # Endpoints
 # ──────────────────────────────────────────────────────────────
@@ -121,6 +127,54 @@ async def create_user(
             db.commit()
             db.refresh(user)
             plan_name = plan.name
+
+    return UserOut(
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        role=user.role.value,
+        is_active=user.is_active,
+        credits_balance=user.credits_balance,
+        plan_name=plan_name,
+    )
+
+
+@router.put("/{user_id}", response_model=UserOut)
+async def update_user(
+    user_id: int,
+    form: UpdateUserRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Editar usuario (nombre, contraseña, estado activo)."""
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if current_user.role == Role.admin and user.role != Role.user:
+        raise HTTPException(status_code=403, detail="No tienes permisos sobre este usuario")
+
+    if form.name is not None:
+        cleaned_name = form.name.strip()
+        user.name = cleaned_name or None
+
+    if form.password is not None:
+        new_password = form.password.strip()
+        if not new_password:
+            raise HTTPException(status_code=400, detail="La contraseña no puede estar vacía")
+        user.password_hash = get_password_hash(new_password)
+
+    if form.is_active is not None:
+        if current_user.id == user.id and form.is_active is False:
+            raise HTTPException(status_code=400, detail="No puedes desactivar tu propio usuario")
+        user.is_active = form.is_active
+
+    db.commit()
+    db.refresh(user)
+
+    plan_name = None
+    if user.user_plan and user.user_plan.plan:
+        plan_name = user.user_plan.plan.name
 
     return UserOut(
         id=user.id,
